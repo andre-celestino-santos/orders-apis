@@ -25,5 +25,5 @@ jobs:
       - name: Build
         run: mvn clean install -DskipTests
 
-      - name: Testes
-        run: mvn test
+      - name: Unit and Integration Tests
+        run: mvn verify

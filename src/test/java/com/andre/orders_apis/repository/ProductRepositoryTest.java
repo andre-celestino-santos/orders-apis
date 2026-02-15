@@ -1,27 +1,27 @@
 package com.andre.orders_apis.repository;
 
-import com.andre.orders_apis.entity.Categoty;
+import com.andre.orders_apis.entity.Category;
 import com.andre.orders_apis.entity.Product;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.math.BigDecimal;
 
-@SpringBootTest
+@DataJpaTest
 public class ProductRepositoryTest {
 
     @Autowired
     private ProductRepository productRepository;
 
     @Test
-    public void createNewProduct() {
+    public void shouldCreateProductSuccessfully() {
         Product product = new Product();
         product.setBrand("Samsung");
         product.setModel("A07");
         product.setPrice(new BigDecimal("594.00"));
-        product.setCategoty(Categoty.SMARTPHONE);
+        product.setCategory(Category.SMARTPHONE);
         product.setStockQuantity(5);
         product.setDescription("Samsung Galaxy A07 128gb, 4gb");
         product.setActive(true);
@@ -32,7 +32,7 @@ public class ProductRepositoryTest {
         Assertions.assertThat(savedProduct.getBrand()).isEqualTo(product.getBrand());
         Assertions.assertThat(savedProduct.getModel()).isEqualTo(product.getModel());
         Assertions.assertThat(savedProduct.getPrice()).isEqualByComparingTo(product.getPrice());
-        Assertions.assertThat(savedProduct.getCategoty()).isEqualTo(product.getCategoty());
+        Assertions.assertThat(savedProduct.getCategory()).isEqualTo(product.getCategory());
         Assertions.assertThat(savedProduct.getStockQuantity()).isEqualTo(product.getStockQuantity());
         Assertions.assertThat(savedProduct.getDescription()).isEqualTo(product.getDescription());
         Assertions.assertThat(savedProduct.getActive()).isEqualTo(product.getActive());
@@ -41,12 +41,12 @@ public class ProductRepositoryTest {
     }
 
     @Test
-    public void updateProduct() {
+    public void shouldUpdateProductSuccessfully() {
         Product product = new Product();
         product.setBrand("Samsung");
         product.setModel("A07");
         product.setPrice(new BigDecimal("594.00"));
-        product.setCategoty(Categoty.SMARTPHONE);
+        product.setCategory(Category.SMARTPHONE);
         product.setStockQuantity(5);
         product.setDescription("Samsung Galaxy A07 128gb, 4gb");
         product.setActive(true);
@@ -57,7 +57,7 @@ public class ProductRepositoryTest {
         Assertions.assertThat(savedProduct.getBrand()).isEqualTo(product.getBrand());
         Assertions.assertThat(savedProduct.getModel()).isEqualTo(product.getModel());
         Assertions.assertThat(savedProduct.getPrice()).isEqualByComparingTo(product.getPrice());
-        Assertions.assertThat(savedProduct.getCategoty()).isEqualTo(product.getCategoty());
+        Assertions.assertThat(savedProduct.getCategory()).isEqualTo(product.getCategory());
         Assertions.assertThat(savedProduct.getStockQuantity()).isEqualTo(product.getStockQuantity());
         Assertions.assertThat(savedProduct.getDescription()).isEqualTo(product.getDescription());
         Assertions.assertThat(savedProduct.getActive()).isEqualTo(product.getActive());
