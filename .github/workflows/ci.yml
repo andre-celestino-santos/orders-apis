@@ -1,0 +1,29 @@
+name: Build and Tests
+
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: maven
+
+      - name: Build
+        run: mvn clean install -DskipTests
+
+      - name: Testes
+        run: mvn test
