@@ -1,1 +1,2 @@
+[![Build and Tests](https://github.com/andre-celestino-santos/orders-apis/actions/workflows/ci.yml/badge.svg)](https://github.com/andre-celestino-santos/orders-apis/actions/workflows/ci.yml)
 # orders-apis
