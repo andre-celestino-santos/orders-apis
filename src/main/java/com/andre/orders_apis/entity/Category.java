@@ -1,6 +1,6 @@
 package com.andre.orders_apis.entity;
 
-public enum Categoty {
+public enum Category {
     ELECTRONICS,
     SMARTPHONE,
     NOTEBOOK,

@@ -35,7 +35,7 @@ public class Product {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Categoty categoty;
+    private Category category;
 
     @Column(nullable = false)
     private Integer stockQuantity;
