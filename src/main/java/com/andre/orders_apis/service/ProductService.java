@@ -36,4 +36,19 @@ public class ProductService {
         return productRepository.save(productUpdate);
     }
 
+    @Transactional
+    public void delete(Integer id) {
+        Optional<Product> productOpt = productRepository.findByIdAndActiveTrue(id);
+
+        if (productOpt.isEmpty()) {
+            throw new ResourceNotFoundException(OrderApiError.PRODUCT_NOT_FOUND, id);
+        }
+
+        Product productDelete = productOpt.get();
+
+        productDelete.setActive(false);
+
+        productRepository.save(productDelete);
+    }
+
 }

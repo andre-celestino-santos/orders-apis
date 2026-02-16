@@ -8,6 +8,7 @@ import com.andre.orders_apis.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,6 +54,13 @@ public class ProductController {
         ProductResponseDto response = productMapper.toResponse(product);
 
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        productService.delete(id);
+
+        return ResponseEntity.noContent().build();
     }
 
 }
