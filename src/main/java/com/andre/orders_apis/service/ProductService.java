@@ -7,7 +7,6 @@ import com.andre.orders_apis.exception.ResourceNotFoundException;
 import com.andre.orders_apis.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,7 +55,7 @@ public class ProductService {
     }
 
     public Page<Product> getAllByCategory(Category category, Pageable pageable) {
-        return productRepository.findAllByCategoryAndActiveTrue(category, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()));
+        return productRepository.findAllByCategoryAndActiveTrue(category, pageable);
     }
 
 }

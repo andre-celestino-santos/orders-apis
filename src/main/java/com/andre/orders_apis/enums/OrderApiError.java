@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum OrderApiError {
-    PRODUCT_NOT_FOUND("ORD-001", "Product {} not found");
+    PRODUCT_NOT_FOUND("ORD-001", "Product %s not found");
 
     private final String code;
     private final String message;
