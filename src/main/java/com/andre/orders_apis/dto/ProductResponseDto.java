@@ -19,7 +19,6 @@ public class ProductResponseDto {
     private Category category;
     private Integer stockQuantity;
     private String description;
-    private Boolean active;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;

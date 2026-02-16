@@ -48,7 +48,6 @@ public class ProductControllerTest {
         request.setCategory(Category.SMARTPHONE);
         request.setStockQuantity(5);
         request.setDescription("Samsung Galaxy A07 128gb, 4gb");
-        request.setActive(true);
 
         Mockito.when(productMapper.toEntity(Mockito.any())).thenReturn(new Product());
 
@@ -81,7 +80,6 @@ public class ProductControllerTest {
         request.setCategory(null);
         request.setStockQuantity(null);
         request.setDescription(null);
-        request.setActive(null);
 
         Mockito.when(productMapper.toEntity(Mockito.any())).thenReturn(new Product());
 
@@ -106,8 +104,7 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.description").value("must not be blank"))
                 .andExpect(jsonPath("$.price").value("must not be null"))
                 .andExpect(jsonPath("$.category").value("must not be null"))
-                .andExpect(jsonPath("$.stockQuantity").value("must not be null"))
-                .andExpect(jsonPath("$.active").value("must not be null"));
+                .andExpect(jsonPath("$.stockQuantity").value("must not be null"));
     }
 
     @Test
@@ -120,7 +117,6 @@ public class ProductControllerTest {
         request.setStockQuantity(5);
         request.setDescription("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234" +
                 "56789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901");
-        request.setActive(true);
 
         Mockito.when(productMapper.toEntity(Mockito.any())).thenReturn(new Product());
 

@@ -44,7 +44,7 @@ public class Product {
     private String description;
 
     @Column(nullable = false)
-    private Boolean active;
+    private Boolean active = true;
 
     @CreationTimestamp
     @Column(nullable = false)
