@@ -89,4 +89,34 @@ public class ProductRepositoryTest {
         Assertions.assertThat(activeProduct).isPresent();
     }
 
+    @Test
+    public void shouldDeleteProductSuccessfully() {
+        Product product = new Product();
+        product.setBrand("Samsung");
+        product.setModel("A07");
+        product.setPrice(new BigDecimal("594.00"));
+        product.setCategory(Category.SMARTPHONE);
+        product.setStockQuantity(5);
+        product.setDescription("Samsung Galaxy A07 128gb, 4gb");
+
+        Product savedProduct = productRepository.save(product);
+
+        Assertions.assertThat(savedProduct.getId()).isGreaterThan(0);
+        Assertions.assertThat(savedProduct.getBrand()).isEqualTo(product.getBrand());
+        Assertions.assertThat(savedProduct.getModel()).isEqualTo(product.getModel());
+        Assertions.assertThat(savedProduct.getPrice()).isEqualByComparingTo(product.getPrice());
+        Assertions.assertThat(savedProduct.getCategory()).isEqualTo(product.getCategory());
+        Assertions.assertThat(savedProduct.getStockQuantity()).isEqualTo(product.getStockQuantity());
+        Assertions.assertThat(savedProduct.getDescription()).isEqualTo(product.getDescription());
+        Assertions.assertThat(savedProduct.getActive()).isTrue();
+        Assertions.assertThat(savedProduct.getCreatedAt()).isNotNull();
+        Assertions.assertThat(savedProduct.getUpdatedAt()).isNotNull();
+
+        savedProduct.setActive(false);
+
+        savedProduct = productRepository.save(savedProduct);
+
+        Assertions.assertThat(savedProduct.getActive()).isFalse();
+    }
+
 }

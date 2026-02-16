@@ -19,6 +19,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -169,6 +170,15 @@ public class ProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(response.getId()))
                 .andExpect(jsonPath("$.description").value(response.getDescription()));
+    }
+
+    @Test
+    public void shouldDeleteProductSuccessfully() throws Exception {
+        Mockito.doNothing().when(productService).delete(Mockito.any());
+
+        mockMvc.perform(delete("/v1/products/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
     }
 
 }

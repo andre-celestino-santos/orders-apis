@@ -20,6 +20,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -116,13 +117,49 @@ public class ProductIT {
     }
 
     @Test
-    public void shouldReturnNotFoundWhenProductIsNotFound() throws Exception {
+    public void shouldReturnNotFoundWhenUpdateProductNotFound() throws Exception {
         Integer id = 999;
         mockMvc.perform(patch("/v1/products/%s".formatted(id))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"description": "new description"}
                                 """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(OrderApiError.PRODUCT_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.message").value(OrderApiError.PRODUCT_NOT_FOUND.getMessage().formatted(id)));
+    }
+
+    @Test
+    public void shouldDeleteProductSuccessfully() throws Exception {
+        ProductRequestDto createRequest = new ProductRequestDto();
+        createRequest.setBrand("Samsung");
+        createRequest.setModel("A07");
+        createRequest.setPrice(new BigDecimal("594.00"));
+        createRequest.setCategory(Category.SMARTPHONE);
+        createRequest.setStockQuantity(5);
+        createRequest.setDescription("Samsung Galaxy A07 128gb, 4gb");
+
+        String createContent = objectMapper.writeValueAsString(createRequest);
+
+        MvcResult result = mockMvc.perform(post("/v1/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createContent))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String responseAsString = result.getResponse().getContentAsString();
+        ProductResponseDto createResponse = objectMapper.readValue(responseAsString, ProductResponseDto.class);
+
+        mockMvc.perform(delete("/v1/products/%s".formatted(createResponse.getId()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void shouldReturnNotFoundWhenDeleteProductNotFound() throws Exception {
+        Integer id = 999;
+        mockMvc.perform(delete("/v1/products/%s".formatted(id))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(OrderApiError.PRODUCT_NOT_FOUND.getCode()))
                 .andExpect(jsonPath("$.message").value(OrderApiError.PRODUCT_NOT_FOUND.getMessage().formatted(id)));
