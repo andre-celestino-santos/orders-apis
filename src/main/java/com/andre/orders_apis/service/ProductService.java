@@ -40,7 +40,7 @@ public class ProductService {
     }
 
     @Transactional
-    public void delete(Integer id) {
+    public void delete(Long id) {
         Optional<Product> productOpt = productRepository.findByIdAndActiveTrue(id);
 
         if (productOpt.isEmpty()) {

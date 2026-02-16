@@ -8,9 +8,9 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
-public interface ProductRepository extends CrudRepository<Product, Integer> {
+public interface ProductRepository extends CrudRepository<Product, Long> {
 
-    Optional<Product> findByIdAndActiveTrue(Integer id);
+    Optional<Product> findByIdAndActiveTrue(Long id);
 
     Page<Product> findAllByCategoryAndActiveTrue(Category category, Pageable pageable);
 

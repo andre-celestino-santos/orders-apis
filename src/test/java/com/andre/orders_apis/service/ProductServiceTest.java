@@ -36,7 +36,7 @@ public class ProductServiceTest {
     @Test
     public void shouldCreateProductSuccessfully() {
         Product savedProductMock = new Product();
-        savedProductMock.setId(1);
+        savedProductMock.setId(1L);
 
         Mockito.when(productRepository.save(Mockito.any())).thenReturn(savedProductMock);
 
@@ -50,11 +50,11 @@ public class ProductServiceTest {
     @Test
     public void shouldUpdateDescriptionSuccessfully() {
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
         product.setDescription("Samsung Galaxy A07 128gb, 4gb");
 
         Product savedProductMock = new Product();
-        savedProductMock.setId(1);
+        savedProductMock.setId(1L);
         savedProductMock.setDescription("new description");
 
         Mockito.when(productRepository.findByIdAndActiveTrue(Mockito.any())).thenReturn(Optional.of(product));
@@ -73,7 +73,7 @@ public class ProductServiceTest {
     @Test
     public void shouldReturnExceptionWhenUpdateProductNotFound() {
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
         product.setDescription("Samsung Galaxy A07 128gb, 4gb");
 
         Mockito.when(productRepository.findByIdAndActiveTrue(Mockito.any())).thenReturn(Optional.empty());
@@ -92,7 +92,7 @@ public class ProductServiceTest {
     @Test
     public void shouldDeleteProductSuccessfully() {
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
 
         Assertions.assertThat(product.getActive()).isTrue();
 
@@ -111,7 +111,7 @@ public class ProductServiceTest {
 
     @Test
     public void shouldReturnExceptionWhenDeleteProductNotFound() {
-        final Integer id = 999;
+        final Long id = 999L;
 
         Mockito.when(productRepository.findByIdAndActiveTrue(Mockito.any())).thenReturn(Optional.empty());
 
@@ -129,7 +129,7 @@ public class ProductServiceTest {
     @Test
     public void shouldReturnAllActiveProductByCategoryWithPagination() {
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
         product.setBrand("Apple");
         product.setModel("Iphone 16");
         product.setCategory(Category.SMARTPHONE);

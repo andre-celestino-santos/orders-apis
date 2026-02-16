@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProductMapper {
 
-    public Product toEntity(Integer id, ProductRequestDto productRequestDto){
+    public Product toEntity(Long id, ProductRequestDto productRequestDto){
         Product product = new Product();
         product.setId(id);
         product.setBrand(productRequestDto.getBrand());

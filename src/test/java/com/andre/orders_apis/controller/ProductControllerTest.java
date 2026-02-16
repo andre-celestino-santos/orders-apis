@@ -58,12 +58,12 @@ public class ProductControllerTest {
         Mockito.when(productMapper.toEntity(Mockito.any())).thenReturn(new Product());
 
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
 
         Mockito.when(productService.create(Mockito.any())).thenReturn(product);
 
         ProductResponseDto response = new ProductResponseDto();
-        response.setId(1);
+        response.setId(1L);
 
         Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
 
@@ -90,12 +90,12 @@ public class ProductControllerTest {
         Mockito.when(productMapper.toEntity(Mockito.any())).thenReturn(new Product());
 
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
 
         Mockito.when(productService.create(Mockito.any())).thenReturn(product);
 
         ProductResponseDto response = new ProductResponseDto();
-        response.setId(1);
+        response.setId(1L);
 
         Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
 
@@ -127,12 +127,12 @@ public class ProductControllerTest {
         Mockito.when(productMapper.toEntity(Mockito.any())).thenReturn(new Product());
 
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
 
         Mockito.when(productService.create(Mockito.any())).thenReturn(product);
 
         ProductResponseDto response = new ProductResponseDto();
-        response.setId(1);
+        response.setId(1L);
 
         Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
 
@@ -155,13 +155,13 @@ public class ProductControllerTest {
         Mockito.when(productMapper.toEntity(Mockito.any(), Mockito.any())).thenReturn(new Product());
 
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
         product.setDescription("new description");
 
         Mockito.when(productService.update(Mockito.any())).thenReturn(product);
 
         ProductResponseDto response = new ProductResponseDto();
-        response.setId(1);
+        response.setId(1L);
         response.setDescription("new description");
 
         Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
@@ -188,7 +188,7 @@ public class ProductControllerTest {
     @Test
     public void shouldReturnAllActiveProductByCategoryWithPagination() throws Exception {
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
         product.setBrand("Apple");
         product.setModel("Iphone 16");
         product.setCategory(Category.SMARTPHONE);
@@ -198,7 +198,7 @@ public class ProductControllerTest {
         Mockito.when(productService.getAllByCategory(Mockito.any(), Mockito.any())).thenReturn(pageSmartphoneProductMock);
 
         ProductResponseDto response = new ProductResponseDto();
-        response.setId(1);
+        response.setId(1L);
         response.setBrand("Apple");
         response.setModel("Iphone 16");
         response.setCategory(Category.SMARTPHONE);
