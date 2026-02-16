@@ -34,7 +34,4 @@ public class ProductRequestDto {
     @Size(min = 1, max = 200)
     private String description;
 
-    @NotNull
-    private Boolean active;
-
 }

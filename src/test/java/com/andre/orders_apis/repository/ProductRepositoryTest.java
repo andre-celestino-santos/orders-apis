@@ -24,7 +24,6 @@ public class ProductRepositoryTest {
         product.setCategory(Category.SMARTPHONE);
         product.setStockQuantity(5);
         product.setDescription("Samsung Galaxy A07 128gb, 4gb");
-        product.setActive(true);
 
         Product savedProduct = productRepository.save(product);
 
@@ -49,7 +48,6 @@ public class ProductRepositoryTest {
         product.setCategory(Category.SMARTPHONE);
         product.setStockQuantity(5);
         product.setDescription("Samsung Galaxy A07 128gb, 4gb");
-        product.setActive(true);
 
         Product savedProduct = productRepository.save(product);
 

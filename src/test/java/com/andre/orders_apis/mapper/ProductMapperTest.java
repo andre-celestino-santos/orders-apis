@@ -17,14 +17,12 @@ public class ProductMapperTest {
     @Test
     public void shouldReturnEntitySuccessfully() {
         ProductRequestDto request = new ProductRequestDto();
-
         request.setBrand("Samsung");
         request.setModel("A07");
         request.setPrice(new BigDecimal("594.00"));
         request.setCategory(Category.SMARTPHONE);
         request.setStockQuantity(5);
         request.setDescription("Samsung Galaxy A07 128gb, 4gb");
-        request.setActive(true);
 
         Product entity = productMapper.toEntity(request);
 
@@ -35,7 +33,7 @@ public class ProductMapperTest {
         Assertions.assertThat(entity.getCategory()).isEqualTo(request.getCategory());
         Assertions.assertThat(entity.getStockQuantity()).isEqualTo(request.getStockQuantity());
         Assertions.assertThat(entity.getDescription()).isEqualTo(request.getDescription());
-        Assertions.assertThat(entity.getActive()).isEqualTo(request.getActive());
+        Assertions.assertThat(entity.getActive()).isTrue();
         Assertions.assertThat(entity.getCreatedAt()).isNull();
         Assertions.assertThat(entity.getUpdatedAt()).isNull();
     }
@@ -50,7 +48,6 @@ public class ProductMapperTest {
         product.setCategory(Category.SMARTPHONE);
         product.setStockQuantity(5);
         product.setDescription("Samsung Galaxy A07 128gb, 4gb");
-        product.setActive(true);
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
 
@@ -63,7 +60,6 @@ public class ProductMapperTest {
         Assertions.assertThat(response.getCategory()).isEqualTo(product.getCategory());
         Assertions.assertThat(response.getStockQuantity()).isEqualTo(product.getStockQuantity());
         Assertions.assertThat(response.getDescription()).isEqualTo(product.getDescription());
-        Assertions.assertThat(response.getActive()).isEqualTo(product.getActive());
         Assertions.assertThat(response.getCreatedAt()).isNotNull();
         Assertions.assertThat(response.getUpdatedAt()).isNotNull();
     }

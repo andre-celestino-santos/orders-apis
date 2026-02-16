@@ -3,6 +3,8 @@ package com.andre.orders_apis.integration;
 import com.andre.orders_apis.dto.ProductRequestDto;
 import com.andre.orders_apis.dto.ProductResponseDto;
 import com.andre.orders_apis.entity.Category;
+import com.andre.orders_apis.entity.Product;
+import com.andre.orders_apis.repository.ProductRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,9 @@ public class ProductIT {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private ProductRepository productRepository;
+
     @Test
     public void shouldCreateProductSuccessfully() throws Exception {
         ProductRequestDto request = new ProductRequestDto();
@@ -38,7 +43,6 @@ public class ProductIT {
         request.setCategory(Category.SMARTPHONE);
         request.setStockQuantity(5);
         request.setDescription("Samsung Galaxy A07 128gb, 4gb");
-        request.setActive(true);
 
         String content = objectMapper.writeValueAsString(request);
 
@@ -58,7 +62,6 @@ public class ProductIT {
         Assertions.assertThat(response.getCategory()).isEqualTo(request.getCategory());
         Assertions.assertThat(response.getStockQuantity()).isEqualTo(request.getStockQuantity());
         Assertions.assertThat(response.getDescription()).isEqualTo(request.getDescription());
-        Assertions.assertThat(response.getActive()).isEqualTo(request.getActive());
         Assertions.assertThat(response.getCreatedAt()).isNotNull();
         Assertions.assertThat(response.getUpdatedAt()).isNotNull();
 
@@ -66,6 +69,9 @@ public class ProductIT {
         String headerLocationResponse = result.getResponse().getHeader(HttpHeaders.LOCATION);
 
         Assertions.assertThat(headerLocationResponse).endsWith(headerLocationExpected);
+
+        Product product = productRepository.findById(response.getId()).get();
+        Assertions.assertThat(product.getActive()).isTrue();
     }
 
 }
