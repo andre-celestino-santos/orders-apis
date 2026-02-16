@@ -4,6 +4,7 @@ import com.andre.orders_apis.dto.ProductRequestDto;
 import com.andre.orders_apis.dto.ProductResponseDto;
 import com.andre.orders_apis.entity.Category;
 import com.andre.orders_apis.entity.Product;
+import com.andre.orders_apis.enums.OrderApiError;
 import com.andre.orders_apis.repository.ProductRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -17,8 +18,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -70,8 +74,58 @@ public class ProductIT {
 
         Assertions.assertThat(headerLocationResponse).endsWith(headerLocationExpected);
 
-        Product product = productRepository.findById(response.getId()).get();
+        Optional<Product> optProduct = productRepository.findById(response.getId());
+        Assertions.assertThat(optProduct).isPresent();
+        Product product = optProduct.get();
         Assertions.assertThat(product.getActive()).isTrue();
+    }
+
+    @Test
+    public void shouldUpdateDescriptionSuccessfully() throws Exception {
+        ProductRequestDto createRequest = new ProductRequestDto();
+        createRequest.setBrand("Samsung");
+        createRequest.setModel("A07");
+        createRequest.setPrice(new BigDecimal("594.00"));
+        createRequest.setCategory(Category.SMARTPHONE);
+        createRequest.setStockQuantity(5);
+        createRequest.setDescription("Samsung Galaxy A07 128gb, 4gb");
+
+        String createContent = objectMapper.writeValueAsString(createRequest);
+
+        MvcResult result = mockMvc.perform(post("/v1/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createContent))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String responseAsString = result.getResponse().getContentAsString();
+        ProductResponseDto createResponse = objectMapper.readValue(responseAsString, ProductResponseDto.class);
+        Assertions.assertThat(createResponse.getDescription()).isEqualTo(createRequest.getDescription());
+
+        ProductRequestDto updateRequest = new ProductRequestDto();
+        updateRequest.setDescription("new description");
+
+        String updateContent = objectMapper.writeValueAsString(updateRequest);
+
+        mockMvc.perform(patch("/v1/products/%s".formatted(createResponse.getId()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateContent))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createResponse.getId()))
+                .andExpect(jsonPath("$.description").value(updateRequest.getDescription()));
+    }
+
+    @Test
+    public void shouldReturnNotFoundWhenProductIsNotFound() throws Exception {
+        Integer id = 999;
+        mockMvc.perform(patch("/v1/products/%s".formatted(id))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"description": "new description"}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(OrderApiError.PRODUCT_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.message").value(OrderApiError.PRODUCT_NOT_FOUND.getMessage().formatted(id)));
     }
 
 }

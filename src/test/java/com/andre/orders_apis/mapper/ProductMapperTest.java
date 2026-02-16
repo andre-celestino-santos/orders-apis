@@ -64,4 +64,28 @@ public class ProductMapperTest {
         Assertions.assertThat(response.getUpdatedAt()).isNotNull();
     }
 
+    @Test
+    public void shouldReturnEntityWithIdSuccessfully() {
+        ProductRequestDto request = new ProductRequestDto();
+        request.setBrand("Samsung");
+        request.setModel("A07");
+        request.setPrice(new BigDecimal("594.00"));
+        request.setCategory(Category.SMARTPHONE);
+        request.setStockQuantity(5);
+        request.setDescription("Samsung Galaxy A07 128gb, 4gb");
+
+        Product entity = productMapper.toEntity(1, request);
+
+        Assertions.assertThat(entity.getId()).isEqualTo(1);
+        Assertions.assertThat(entity.getBrand()).isEqualTo(request.getBrand());
+        Assertions.assertThat(entity.getModel()).isEqualTo(request.getModel());
+        Assertions.assertThat(entity.getPrice()).isEqualByComparingTo(request.getPrice());
+        Assertions.assertThat(entity.getCategory()).isEqualTo(request.getCategory());
+        Assertions.assertThat(entity.getStockQuantity()).isEqualTo(request.getStockQuantity());
+        Assertions.assertThat(entity.getDescription()).isEqualTo(request.getDescription());
+        Assertions.assertThat(entity.getActive()).isTrue();
+        Assertions.assertThat(entity.getCreatedAt()).isNull();
+        Assertions.assertThat(entity.getUpdatedAt()).isNull();
+    }
+
 }
