@@ -19,6 +19,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -139,6 +140,35 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.brand").value("size must be between 1 and 100"))
                 .andExpect(jsonPath("$.model").value("size must be between 1 and 100"))
                 .andExpect(jsonPath("$.description").value("size must be between 1 and 200"));
+    }
+
+    @Test
+    public void shouldUpdateDescriptionSuccessfully() throws Exception {
+        ProductRequestDto request = new ProductRequestDto();
+        request.setDescription("new description");
+
+        Mockito.when(productMapper.toEntity(Mockito.any(), Mockito.any())).thenReturn(new Product());
+
+        Product product = new Product();
+        product.setId(1);
+        product.setDescription("new description");
+
+        Mockito.when(productService.update(Mockito.any())).thenReturn(product);
+
+        ProductResponseDto response = new ProductResponseDto();
+        response.setId(1);
+        response.setDescription("new description");
+
+        Mockito.when(productMapper.toResponse(Mockito.any())).thenReturn(response);
+
+        String content = objectMapper.writeValueAsString(request);
+
+        mockMvc.perform(patch("/v1/products/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(response.getId()))
+                .andExpect(jsonPath("$.description").value(response.getDescription()));
     }
 
 }
