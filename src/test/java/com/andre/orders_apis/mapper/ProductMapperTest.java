@@ -6,9 +6,12 @@ import com.andre.orders_apis.entity.Category;
 import com.andre.orders_apis.entity.Product;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ProductMapperTest {
 
@@ -86,6 +89,27 @@ public class ProductMapperTest {
         Assertions.assertThat(entity.getActive()).isTrue();
         Assertions.assertThat(entity.getCreatedAt()).isNull();
         Assertions.assertThat(entity.getUpdatedAt()).isNull();
+    }
+
+    @Test
+    public void shouldReturnPageResponseSuccessfully() {
+        Product product = new Product();
+        product.setId(1);
+        product.setBrand("Samsung");
+        product.setModel("A07");
+        product.setPrice(new BigDecimal("594.00"));
+        product.setCategory(Category.SMARTPHONE);
+        product.setStockQuantity(5);
+        product.setDescription("Samsung Galaxy A07 128gb, 4gb");
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+
+        Page<Product> pageProduct = new PageImpl<>(List.of(product, product, product));
+
+        Page<ProductResponseDto> pageResponse = productMapper.toResponse(pageProduct);
+
+        Assertions.assertThat(pageResponse.getTotalElements()).isEqualTo(3);
+        Assertions.assertThat(pageResponse.getContent()).hasSize(3);
     }
 
 }

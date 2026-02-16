@@ -1,10 +1,14 @@
 package com.andre.orders_apis.service;
 
+import com.andre.orders_apis.entity.Category;
 import com.andre.orders_apis.entity.Product;
 import com.andre.orders_apis.enums.OrderApiError;
 import com.andre.orders_apis.exception.ResourceNotFoundException;
 import com.andre.orders_apis.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +53,10 @@ public class ProductService {
         productDelete.setActive(false);
 
         productRepository.save(productDelete);
+    }
+
+    public Page<Product> getAllByCategory(Category category, Pageable pageable) {
+        return productRepository.findAllByCategoryAndActiveTrue(category, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()));
     }
 
 }

@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -18,8 +20,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -61,7 +65,7 @@ public class ProductControllerTest {
         ProductResponseDto response = new ProductResponseDto();
         response.setId(1);
 
-        Mockito.when(productMapper.toResponse(Mockito.any())).thenReturn(response);
+        Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
 
         String content = objectMapper.writeValueAsString(request);
 
@@ -93,7 +97,7 @@ public class ProductControllerTest {
         ProductResponseDto response = new ProductResponseDto();
         response.setId(1);
 
-        Mockito.when(productMapper.toResponse(Mockito.any())).thenReturn(response);
+        Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
 
         String content = objectMapper.writeValueAsString(request);
 
@@ -130,7 +134,7 @@ public class ProductControllerTest {
         ProductResponseDto response = new ProductResponseDto();
         response.setId(1);
 
-        Mockito.when(productMapper.toResponse(Mockito.any())).thenReturn(response);
+        Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
 
         String content = objectMapper.writeValueAsString(request);
 
@@ -160,7 +164,7 @@ public class ProductControllerTest {
         response.setId(1);
         response.setDescription("new description");
 
-        Mockito.when(productMapper.toResponse(Mockito.any())).thenReturn(response);
+        Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
 
         String content = objectMapper.writeValueAsString(request);
 
@@ -179,6 +183,40 @@ public class ProductControllerTest {
         mockMvc.perform(delete("/v1/products/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void shouldReturnAllActiveProductByCategoryWithPagination() throws Exception {
+        Product product = new Product();
+        product.setId(1);
+        product.setBrand("Apple");
+        product.setModel("Iphone 16");
+        product.setCategory(Category.SMARTPHONE);
+
+        Page<Product> pageSmartphoneProductMock = new PageImpl<>(List.of(product));
+
+        Mockito.when(productService.getAllByCategory(Mockito.any(), Mockito.any())).thenReturn(pageSmartphoneProductMock);
+
+        ProductResponseDto response = new ProductResponseDto();
+        response.setId(1);
+        response.setBrand("Apple");
+        response.setModel("Iphone 16");
+        response.setCategory(Category.SMARTPHONE);
+
+        Page<ProductResponseDto> pageResponseMock = new PageImpl<>(List.of(response));
+
+        Mockito.when(productMapper.toResponse(Mockito.isA(Page.class))).thenReturn(pageResponseMock);
+
+        mockMvc.perform(get("/v1/products?category=SMARTPHONE")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].brand").value("Apple"))
+                .andExpect(jsonPath("$.content[0].model").value("Iphone 16"))
+                .andExpect(jsonPath("$.content[0].category").value("SMARTPHONE"));
     }
 
 }

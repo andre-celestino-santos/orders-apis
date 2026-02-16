@@ -7,6 +7,7 @@ import com.andre.orders_apis.entity.Product;
 import com.andre.orders_apis.enums.OrderApiError;
 import com.andre.orders_apis.repository.ProductRepository;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -38,6 +40,11 @@ public class ProductIT {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @BeforeEach
+    public void beforeEach() {
+        productRepository.deleteAll();
+    }
 
     @Test
     public void shouldCreateProductSuccessfully() throws Exception {
@@ -163,6 +170,73 @@ public class ProductIT {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(OrderApiError.PRODUCT_NOT_FOUND.getCode()))
                 .andExpect(jsonPath("$.message").value(OrderApiError.PRODUCT_NOT_FOUND.getMessage().formatted(id)));
+    }
+
+    @Test
+    public void shouldReturnAllActiveProductByCategoryWithPagination() throws Exception {
+        ProductRequestDto request = new ProductRequestDto();
+        request.setBrand("Samsung");
+        request.setModel("A07");
+        request.setPrice(new BigDecimal("594.11"));
+        request.setCategory(Category.SMARTPHONE);
+        request.setStockQuantity(5);
+        request.setDescription("Samsung Galaxy A07 128gb, 4gb");
+
+        String content = objectMapper.writeValueAsString(request);
+
+        MvcResult result = null;
+        for (int i = 0; i < 21; i++){
+            result = mockMvc.perform(post("/v1/products")
+                            .contentType(MediaType.APPLICATION_JSON)
+
+                            .content(content))
+                    .andExpect(status().isCreated()).andReturn();
+        }
+
+        mockMvc.perform(get("/v1/products?category=SMARTPHONE")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.totalElements").value(21))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.content[0].id").exists())
+                .andExpect(jsonPath("$.content[0].brand").value("Samsung"))
+                .andExpect(jsonPath("$.content[0].model").value("A07"))
+                .andExpect(jsonPath("$.content[0].category").value("SMARTPHONE"))
+                .andExpect(jsonPath("$.content[0].description").value("Samsung Galaxy A07 128gb, 4gb"))
+                .andExpect(jsonPath("$.content[0].price").value(new BigDecimal("594.11")));
+
+
+        String responseAsString = result.getResponse().getContentAsString();
+        ProductResponseDto createResponse = objectMapper.readValue(responseAsString, ProductResponseDto.class);
+
+        mockMvc.perform(delete("/v1/products/%s".formatted(createResponse.getId()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/v1/products?category=SMARTPHONE")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.totalElements").value(20))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.content[0].id").exists())
+                .andExpect(jsonPath("$.content[0].brand").value("Samsung"))
+                .andExpect(jsonPath("$.content[0].model").value("A07"))
+                .andExpect(jsonPath("$.content[0].category").value("SMARTPHONE"))
+                .andExpect(jsonPath("$.content[0].description").value("Samsung Galaxy A07 128gb, 4gb"))
+                .andExpect(jsonPath("$.content[0].price").value(new BigDecimal("594.11")));
+    }
+
+    @Test
+    public void shouldReturnEmptyContentWhenThereAreNoProduct() throws Exception {
+        mockMvc.perform(get("/v1/products?category=SMARTPHONE")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0))
+                .andExpect(jsonPath("$.content").isEmpty());
     }
 
 }

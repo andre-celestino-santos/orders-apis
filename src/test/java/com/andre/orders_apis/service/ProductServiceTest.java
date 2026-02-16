@@ -1,5 +1,6 @@
 package com.andre.orders_apis.service;
 
+import com.andre.orders_apis.entity.Category;
 import com.andre.orders_apis.entity.Product;
 import com.andre.orders_apis.enums.OrderApiError;
 import com.andre.orders_apis.exception.ResourceNotFoundException;
@@ -13,7 +14,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -119,6 +124,24 @@ public class ProductServiceTest {
                 .isEqualTo(OrderApiError.PRODUCT_NOT_FOUND.getCode());
         Assertions.assertThat(resourceNotFoundException.getFormattedMessage())
                 .isEqualTo(OrderApiError.PRODUCT_NOT_FOUND.getMessage().formatted(id));
+    }
+
+    @Test
+    public void shouldReturnAllActiveProductByCategoryWithPagination() {
+        Product product = new Product();
+        product.setId(1);
+        product.setBrand("Apple");
+        product.setModel("Iphone 16");
+        product.setCategory(Category.SMARTPHONE);
+
+        Page<Product> pageSmartphoneProductMock = new PageImpl<>(List.of(product));
+
+        Mockito.when(productRepository.findAllByCategoryAndActiveTrue(Mockito.any(), Mockito.any())).thenReturn(pageSmartphoneProductMock);
+
+        Page<Product> pageSmartphoneProduct = productService.getAllByCategory(Category.SMARTPHONE, Pageable.ofSize(5));
+
+        Assertions.assertThat(pageSmartphoneProduct.getTotalElements()).isEqualTo(1);
+        Assertions.assertThat(pageSmartphoneProduct.getContent()).hasSize(1);
     }
 
 }

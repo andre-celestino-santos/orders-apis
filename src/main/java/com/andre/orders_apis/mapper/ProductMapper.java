@@ -3,6 +3,7 @@ package com.andre.orders_apis.mapper;
 import com.andre.orders_apis.dto.ProductRequestDto;
 import com.andre.orders_apis.dto.ProductResponseDto;
 import com.andre.orders_apis.entity.Product;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -36,6 +37,10 @@ public class ProductMapper {
         productResponseDto.setCreatedAt(product.getCreatedAt());
         productResponseDto.setUpdatedAt(product.getUpdatedAt());
         return productResponseDto;
+    }
+
+    public Page<ProductResponseDto> toResponse(Page<Product> pageProduct) {
+        return pageProduct.map(this::toResponse);
     }
 
 }
