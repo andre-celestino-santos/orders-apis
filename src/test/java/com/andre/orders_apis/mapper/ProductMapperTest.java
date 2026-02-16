@@ -44,7 +44,7 @@ public class ProductMapperTest {
     @Test
     public void shouldReturnResponseSuccessfully() {
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
         product.setBrand("Samsung");
         product.setModel("A07");
         product.setPrice(new BigDecimal("594.00"));
@@ -77,7 +77,7 @@ public class ProductMapperTest {
         request.setStockQuantity(5);
         request.setDescription("Samsung Galaxy A07 128gb, 4gb");
 
-        Product entity = productMapper.toEntity(1, request);
+        Product entity = productMapper.toEntity(1L, request);
 
         Assertions.assertThat(entity.getId()).isEqualTo(1);
         Assertions.assertThat(entity.getBrand()).isEqualTo(request.getBrand());
@@ -94,7 +94,7 @@ public class ProductMapperTest {
     @Test
     public void shouldReturnPageResponseSuccessfully() {
         Product product = new Product();
-        product.setId(1);
+        product.setId(1L);
         product.setBrand("Samsung");
         product.setModel("A07");
         product.setPrice(new BigDecimal("594.00"));

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 public class ProductResponseDto {
 
-    private Integer id;
+    private Long id;
     private String brand;
     private String model;
     private BigDecimal price;
