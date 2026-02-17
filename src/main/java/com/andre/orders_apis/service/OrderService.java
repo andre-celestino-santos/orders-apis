@@ -2,6 +2,7 @@ package com.andre.orders_apis.service;
 
 import com.andre.orders_apis.entity.Order;
 import com.andre.orders_apis.entity.OrderItem;
+import com.andre.orders_apis.entity.OrderStatus;
 import com.andre.orders_apis.entity.Product;
 import com.andre.orders_apis.enums.OrderApiError;
 import com.andre.orders_apis.exception.BusinessException;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -60,6 +62,37 @@ public class OrderService {
         orderItemRepository.saveAll(order.getItems());
 
         return savedOrder;
+    }
+
+    @Transactional
+    public void cancel(Long id) {
+        Optional<Order> optOrder = orderRepository.findById(id);
+
+        if (optOrder.isEmpty()) {
+            throw new ResourceNotFoundException(OrderApiError.ORDER_NOT_FOUND, id);
+        }
+
+        Order order = optOrder.get();
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            return;
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findAllByOrder(order);
+
+        for (OrderItem item : items) {
+            Product product = item.getProduct();
+
+            Integer newStockQuantity = product.getStockQuantity() + item.getQuantity();
+
+            product.setStockQuantity(newStockQuantity);
+
+            productRepository.save(product);
+        }
     }
 
 }
