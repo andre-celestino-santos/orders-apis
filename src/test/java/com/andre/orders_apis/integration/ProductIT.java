@@ -5,6 +5,8 @@ import com.andre.orders_apis.dto.ProductResponseDto;
 import com.andre.orders_apis.entity.Category;
 import com.andre.orders_apis.entity.Product;
 import com.andre.orders_apis.enums.OrderApiError;
+import com.andre.orders_apis.repository.OrderItemRepository;
+import com.andre.orders_apis.repository.OrderRepository;
 import com.andre.orders_apis.repository.ProductRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,8 +43,16 @@ public class ProductIT {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
     @BeforeEach
     public void beforeEach() {
+        orderItemRepository.deleteAll();
+        orderRepository.deleteAll();
         productRepository.deleteAll();
     }
 
