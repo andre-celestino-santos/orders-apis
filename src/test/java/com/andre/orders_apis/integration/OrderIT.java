@@ -7,6 +7,8 @@ import com.andre.orders_apis.dto.OrderResponseDto;
 import com.andre.orders_apis.dto.ProductRequestDto;
 import com.andre.orders_apis.dto.ProductResponseDto;
 import com.andre.orders_apis.entity.Category;
+import com.andre.orders_apis.entity.Order;
+import com.andre.orders_apis.entity.OrderItem;
 import com.andre.orders_apis.entity.OrderStatus;
 import com.andre.orders_apis.entity.Product;
 import com.andre.orders_apis.enums.OrderApiError;
@@ -181,6 +183,62 @@ public class OrderIT {
                         .formatted(itemRequest.getQuantity(), itemRequest.getId(), createdProduct.getStockQuantity())));
     }
 
+    @Test
+    public void shouldCancelOrderSuccessfully() throws Exception {
+        ProductResponseDto createdProduct = createProduct();
+
+        OrderResponseDto createdOrder = createOrder(createdProduct);
+
+        cancelOrder(createdOrder.getId());
+
+        Optional<Order> optOrder = orderRepository.findById(createdOrder.getId());
+        Assertions.assertThat(optOrder).isPresent();
+
+        Order order = optOrder.get();
+        Assertions.assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+
+        List<OrderItem> items = orderItemRepository.findAllByOrder(order);
+        Assertions.assertThat(items).hasSize(1);
+
+        Product product = items.get(0).getProduct();
+        Assertions.assertThat(product.getId()).isEqualTo(createdProduct.getId());
+        Assertions.assertThat(product.getStockQuantity()).isEqualTo(createdProduct.getStockQuantity());
+    }
+
+    @Test
+    public void shouldCancelOrderAlreadyCancelledSuccessfully() throws Exception {
+        ProductResponseDto createdProduct = createProduct();
+
+        OrderResponseDto createdOrder = createOrder(createdProduct);
+
+        cancelOrder(createdOrder.getId());
+
+        cancelOrder(createdOrder.getId());
+
+        Optional<Order> optOrder = orderRepository.findById(createdOrder.getId());
+        Assertions.assertThat(optOrder).isPresent();
+
+        Order order = optOrder.get();
+        Assertions.assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+
+        List<OrderItem> items = orderItemRepository.findAllByOrder(order);
+        Assertions.assertThat(items).hasSize(1);
+
+        Product product = items.get(0).getProduct();
+        Assertions.assertThat(product.getId()).isEqualTo(createdProduct.getId());
+        Assertions.assertThat(product.getStockQuantity()).isEqualTo(createdProduct.getStockQuantity());
+    }
+
+    @Test
+    public void shouldReturnNotFoundWhenCancelOrderNotFound() throws Exception {
+        Long orderId = 999L;
+
+        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(orderId)))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(OrderApiError.ORDER_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.message").value(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(orderId)));
+    }
 
     private ProductResponseDto createProduct() throws Exception {
         ProductRequestDto request = new ProductRequestDto();
@@ -201,6 +259,38 @@ public class OrderIT {
                 .andReturn();
 
         return objectMapper.readValue(result.getResponse().getContentAsString(), ProductResponseDto.class);
+    }
+
+    private OrderResponseDto createOrder(ProductResponseDto createdProduct) throws Exception {
+        OrderRequestDto request = new OrderRequestDto();
+        request.setCustomerId("abc123");
+
+        List<OrderItemRequestDto> requestItems = new ArrayList<>();
+        OrderItemRequestDto itemRequest = new OrderItemRequestDto();
+        itemRequest.setQuantity(2);
+        itemRequest.setId(createdProduct.getId());
+        requestItems.add(itemRequest);
+
+        request.setItems(requestItems);
+
+        String content = objectMapper.writeValueAsString(request);
+
+        MvcResult result = mockMvc.perform(post("/v1/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String responseAsString = result.getResponse().getContentAsString();
+
+        return objectMapper.readValue(responseAsString, OrderResponseDto.class);
+    }
+
+    private void cancelOrder(Long id) throws Exception {
+        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(id)))
+                .andDo(print())
+                .andExpect(status().isNoContent());
     }
 
 }

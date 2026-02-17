@@ -2,6 +2,7 @@ package com.andre.orders_apis.service;
 
 import com.andre.orders_apis.entity.Order;
 import com.andre.orders_apis.entity.OrderItem;
+import com.andre.orders_apis.entity.OrderStatus;
 import com.andre.orders_apis.entity.Product;
 import com.andre.orders_apis.enums.OrderApiError;
 import com.andre.orders_apis.exception.BusinessException;
@@ -43,6 +44,9 @@ public class OrderServiceTest {
 
     @Captor
     private ArgumentCaptor<List<OrderItem>> itemsCaptor;
+
+    @Captor
+    private ArgumentCaptor<Order> orderCaptor;
 
     @Test
     public void shouldCreateOrderSuccessfully() {
@@ -173,6 +177,94 @@ public class OrderServiceTest {
         Assertions.assertThat(businessException.getFormattedMessage())
                 .isEqualTo(OrderApiError.PRODUCT_INSUFFICIENT_STOCK_QUANTITY.getMessage().formatted(item.getQuantity(), product.getId(), savedProduct.getStockQuantity()));
 
+    }
+
+    @Test
+    public void shouldCancelOrderSuccessfully() {
+        Order order = new Order();
+        order.setId(14L);
+
+        Optional<Order> optOrder = Optional.of(order);
+
+        Mockito.when(orderRepository.findById(Mockito.any())).thenReturn(optOrder);
+
+        Mockito.when(orderRepository.save(orderCaptor.capture())).thenReturn(order);
+
+        Product product = new Product();
+        product.setId(7L);
+        product.setStockQuantity(5);
+
+        List<OrderItem> items = new ArrayList<>();
+        OrderItem item = new OrderItem();
+        item.setId(9L);
+        item.setQuantity(7);
+        item.setProduct(product);
+        items.add(item);
+
+        Mockito.when(orderItemRepository.findAllByOrder(Mockito.any())).thenReturn(items);
+
+        Mockito.when(productRepository.save(productCaptor.capture())).thenReturn(new Product());
+
+        orderService.cancel(order.getId());
+
+        Mockito.verify(orderRepository, Mockito.atMostOnce()).findById(Mockito.any());
+
+        Mockito.verify(orderRepository, Mockito.atMostOnce()).save(Mockito.any());
+
+        Mockito.verify(orderItemRepository, Mockito.atMostOnce()).findAllByOrder(Mockito.any());
+
+        Mockito.verify(productRepository, Mockito.atMostOnce()).save(Mockito.any());
+
+        Order orderCaptorValue = orderCaptor.getValue();
+
+        Assertions.assertThat(orderCaptorValue.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+
+        Product productCaptorValue = productCaptor.getValue();
+
+        Assertions.assertThat(productCaptorValue.getStockQuantity()).isEqualTo(12);
+    }
+
+    @Test
+    public void shouldReturnExceptionWithOrderNotFound() {
+        Long orderId = 999L;
+
+        Mockito.when(orderRepository.findById(Mockito.any())).thenReturn(Optional.empty());
+
+        ResourceNotFoundException resourceNotFoundException = Assertions.catchThrowableOfType(ResourceNotFoundException.class,
+                () -> orderService.cancel(orderId));
+
+        Mockito.verify(orderRepository, Mockito.atMostOnce()).findById(Mockito.any());
+
+        Mockito.verify(orderRepository, Mockito.never()).save(Mockito.any());
+
+        Mockito.verify(orderItemRepository, Mockito.never()).findAllByOrder(Mockito.any());
+
+        Mockito.verify(productRepository, Mockito.never()).save(Mockito.any());
+
+        Assertions.assertThat(resourceNotFoundException.getCode()).isEqualTo(OrderApiError.ORDER_NOT_FOUND.getCode());
+        Assertions.assertThat(resourceNotFoundException.getFormattedMessage())
+                .isEqualTo(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(orderId));
+    }
+
+    @Test
+    public void shouldCancelOrderAlreadyCancelledSuccessfully() {
+        Order order = new Order();
+        order.setId(18L);
+        order.setStatus(OrderStatus.CANCELLED);
+
+        Optional<Order> optOrder = Optional.of(order);
+
+        Mockito.when(orderRepository.findById(Mockito.any())).thenReturn(optOrder);
+
+        orderService.cancel(order.getId());
+
+        Mockito.verify(orderRepository, Mockito.atMostOnce()).findById(Mockito.any());
+
+        Mockito.verify(orderRepository, Mockito.never()).save(Mockito.any());
+
+        Mockito.verify(orderItemRepository, Mockito.never()).findAllByOrder(Mockito.any());
+
+        Mockito.verify(productRepository, Mockito.never()).save(Mockito.any());
     }
 
 }

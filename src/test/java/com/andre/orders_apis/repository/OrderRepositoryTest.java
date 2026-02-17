@@ -10,6 +10,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @DataJpaTest
 public class OrderRepositoryTest {
@@ -22,9 +23,26 @@ public class OrderRepositoryTest {
         createOrder();
     }
 
-    private void createOrder() {
+    @Test
+    public void shouldReturnOrder() {
+        Order savedOrder = createOrder();
+
+        Optional<Order> optOrder = orderRepository.findById(savedOrder.getId());
+
+        Assertions.assertThat(optOrder).isPresent();
+    }
+
+    @Test
+    public void shouldNotReturnOrder() {
+        Optional<Order> optOrder = orderRepository.findById(999L);
+
+        Assertions.assertThat(optOrder).isEmpty();
+    }
+
+    private Order createOrder() {
         Order order = new Order();
         order.setCustomerId("1234");
+
 
         List<OrderItem> items = new ArrayList<>();
         OrderItem orderItem = new OrderItem();
@@ -37,10 +55,13 @@ public class OrderRepositoryTest {
         Assertions.assertThat(savedOrder.getId()).isGreaterThan(0);
         Assertions.assertThat(savedOrder.getCustomerId()).isEqualTo(order.getCustomerId());
         Assertions.assertThat(savedOrder.getStatus()).isEqualTo(OrderStatus.CREATED);
+
         Assertions.assertThat(savedOrder.getCreatedAt()).isNotNull();
         Assertions.assertThat(savedOrder.getUpdatedAt()).isNotNull();
 
         Assertions.assertThat(savedOrder.getItems().get(0).getId()).isNull();
+
+        return savedOrder;
     }
 
 }

@@ -6,6 +6,8 @@ import com.andre.orders_apis.dto.OrderRequestDto;
 import com.andre.orders_apis.dto.OrderResponseDto;
 import com.andre.orders_apis.entity.Order;
 import com.andre.orders_apis.entity.OrderStatus;
+import com.andre.orders_apis.enums.OrderApiError;
+import com.andre.orders_apis.exception.ResourceNotFoundException;
 import com.andre.orders_apis.mapper.OrderMapper;
 import com.andre.orders_apis.service.OrderService;
 import org.hamcrest.Matchers;
@@ -411,6 +413,34 @@ public class OrderControllerTest {
         Mockito.verify(orderService, Mockito.never()).create(Mockito.any());
 
         Mockito.verify(orderMapper, Mockito.never()).toEntity(Mockito.any());
+    }
+
+    @Test
+    public void shouldCancelOrderSuccessfully() throws Exception {
+        Mockito.doNothing().when(orderService).cancel(Mockito.any());
+
+        mockMvc.perform(post("/v1/orders/76/cancel"))
+                        .andDo(print())
+                        .andExpect(status().isNoContent());
+
+        Mockito.verify(orderService, Mockito.atMostOnce()).cancel(Mockito.any());
+    }
+
+    @Test
+    public void shouldReturnNotFoundWhenCancelOrderNotFound() throws Exception {
+        Long orderId = 999L;
+
+        ResourceNotFoundException resourceNotFoundException = new ResourceNotFoundException(OrderApiError.ORDER_NOT_FOUND, orderId);
+
+        Mockito.doThrow(resourceNotFoundException).when(orderService).cancel(Mockito.any());
+
+        mockMvc.perform(post("/v1/orders/76/cancel"))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(OrderApiError.ORDER_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.message").value(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(orderId)));
+
+        Mockito.verify(orderService, Mockito.atMostOnce()).cancel(Mockito.any());
     }
 
 }

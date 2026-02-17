@@ -8,6 +8,7 @@ import com.andre.orders_apis.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,6 +40,13 @@ public class OrderController {
         OrderResponseDto response = orderMapper.toResponse(order);
 
         return ResponseEntity.created(location).body(response);
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancel(@PathVariable Long id) {
+        orderService.cancel(id);
+
+        return ResponseEntity.noContent().build();
     }
 
 }
