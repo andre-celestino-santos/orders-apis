@@ -98,6 +98,14 @@ public class ProductRepositoryTest {
         }
     }
 
+    @Test
+    public void shouldReturnActiveProductForUpdateSuccessfully() {
+        Product savedProduct = createProduct();
+
+        Optional<Product> activeProduct = productRepository.findByIdAndActiveTrueForUpdate(savedProduct.getId());
+        Assertions.assertThat(activeProduct).isPresent();
+    }
+
     private Product createProduct(Category category, String brand, String model, Boolean active) {
         Product product = new Product();
         product.setBrand(brand);
