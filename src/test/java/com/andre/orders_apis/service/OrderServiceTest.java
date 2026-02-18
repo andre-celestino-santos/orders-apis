@@ -70,7 +70,7 @@ public class OrderServiceTest {
 
         Optional<Product> optProduct = Optional.of(savedProduct);
 
-        Mockito.when(productRepository.findByIdAndActiveTrue(Mockito.any())).thenReturn(optProduct);
+        Mockito.when(productRepository.findByIdAndActiveTrueForUpdate(Mockito.any())).thenReturn(optProduct);
 
         Mockito.when(productRepository.save(productCaptor.capture())).thenReturn(product);
 
@@ -84,7 +84,7 @@ public class OrderServiceTest {
 
         Mockito.verify(orderRepository, Mockito.atMostOnce()).save(Mockito.any());
 
-        Mockito.verify(productRepository, Mockito.atMostOnce()).findByIdAndActiveTrue(Mockito.any());
+        Mockito.verify(productRepository, Mockito.atMostOnce()).findByIdAndActiveTrueForUpdate(Mockito.any());
 
         Mockito.verify(productRepository, Mockito.atMostOnce()).save(Mockito.any());
 
@@ -121,14 +121,14 @@ public class OrderServiceTest {
 
         Mockito.when(orderRepository.save(Mockito.any())).thenReturn(new Order());
 
-        Mockito.when(productRepository.findByIdAndActiveTrue(Mockito.any())).thenReturn(Optional.empty());
+        Mockito.when(productRepository.findByIdAndActiveTrueForUpdate(Mockito.any())).thenReturn(Optional.empty());
 
         ResourceNotFoundException resourceNotFoundException = Assertions.catchThrowableOfType(ResourceNotFoundException.class,
                 () -> orderService.create(order));
 
         Mockito.verify(orderRepository, Mockito.atMostOnce()).save(Mockito.any());
 
-        Mockito.verify(productRepository, Mockito.atMostOnce()).findByIdAndActiveTrue(Mockito.any());
+        Mockito.verify(productRepository, Mockito.atMostOnce()).findByIdAndActiveTrueForUpdate(Mockito.any());
 
         Mockito.verify(productRepository, Mockito.never()).save(Mockito.any());
 
@@ -161,13 +161,13 @@ public class OrderServiceTest {
 
         Optional<Product> optProduct = Optional.of(savedProduct);
 
-        Mockito.when(productRepository.findByIdAndActiveTrue(Mockito.any())).thenReturn(optProduct);
+        Mockito.when(productRepository.findByIdAndActiveTrueForUpdate(Mockito.any())).thenReturn(optProduct);
 
         BusinessException businessException = Assertions.catchThrowableOfType(BusinessException.class, () -> orderService.create(order));
 
         Mockito.verify(orderRepository, Mockito.atMostOnce()).save(Mockito.any());
 
-        Mockito.verify(productRepository, Mockito.atMostOnce()).findByIdAndActiveTrue(Mockito.any());
+        Mockito.verify(productRepository, Mockito.atMostOnce()).findByIdAndActiveTrueForUpdate(Mockito.any());
 
         Mockito.verify(productRepository, Mockito.never()).save(Mockito.any());
 

@@ -35,7 +35,7 @@ public class OrderService {
 
             Long productId = orderItem.getProduct().getId();
 
-            Optional<Product> optProduct = productRepository.findByIdAndActiveTrue(productId);
+            Optional<Product> optProduct = productRepository.findByIdAndActiveTrueForUpdate(productId);
 
             if (optProduct.isEmpty()) {
                 throw new ResourceNotFoundException(OrderApiError.PRODUCT_NOT_FOUND, productId);

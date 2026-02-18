@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -31,6 +32,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -112,6 +117,60 @@ public class OrderIT {
         Assertions.assertThat(optProduct).isPresent();
         Product product = optProduct.get();
         Assertions.assertThat(product.getStockQuantity()).isEqualTo(3);
+    }
+
+    @Test
+    public void shouldCreateOrderInParallelSuccessfully() throws Exception {
+        ProductResponseDto createdProduct = createProduct(100);
+
+        OrderRequestDto request = new OrderRequestDto();
+        request.setCustomerId("abc123");
+
+        List<OrderItemRequestDto> requestItems = new ArrayList<>();
+        OrderItemRequestDto itemRequest = new OrderItemRequestDto();
+        itemRequest.setQuantity(1);
+        itemRequest.setId(createdProduct.getId());
+        requestItems.add(itemRequest);
+
+        request.setItems(requestItems);
+
+        String content = objectMapper.writeValueAsString(request);
+
+        AtomicInteger createdOrderCount = new AtomicInteger();
+
+        Runnable task = () -> {
+            try {
+                MvcResult result = mockMvc.perform(post("/v1/orders")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(content))
+                        .andReturn();
+
+                if (HttpStatus.CREATED.value() == result.getResponse().getStatus()) {
+                    createdOrderCount.incrementAndGet();
+                }
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        ExecutorService threadPool = Executors.newFixedThreadPool(10);
+
+        for (int i = 0; i < createdProduct.getStockQuantity(); i++) {
+            threadPool.submit(task);
+        }
+
+        threadPool.shutdown();
+
+        boolean isTerminated = threadPool.awaitTermination(120, TimeUnit.SECONDS);
+        Assertions.assertThat(isTerminated).isTrue();
+
+        Assertions.assertThat(createdOrderCount.get()).isEqualTo(createdProduct.getStockQuantity());
+
+        Optional<Product> optProduct = productRepository.findById(createdProduct.getId());
+        Assertions.assertThat(optProduct).isPresent();
+        Product product = optProduct.get();
+        Assertions.assertThat(product.getStockQuantity()).isEqualTo(0);
     }
 
     @Test
@@ -240,13 +299,13 @@ public class OrderIT {
                 .andExpect(jsonPath("$.message").value(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(orderId)));
     }
 
-    private ProductResponseDto createProduct() throws Exception {
+    private ProductResponseDto createProduct(Integer stockQuantity) throws Exception {
         ProductRequestDto request = new ProductRequestDto();
         request.setBrand("Samsung");
         request.setModel("A07");
         request.setPrice(new BigDecimal("594.00"));
         request.setCategory(Category.SMARTPHONE);
-        request.setStockQuantity(5);
+        request.setStockQuantity(stockQuantity);
         request.setDescription("Samsung Galaxy A07 128gb, 4gb");
 
         String content = objectMapper.writeValueAsString(request);
@@ -259,6 +318,10 @@ public class OrderIT {
                 .andReturn();
 
         return objectMapper.readValue(result.getResponse().getContentAsString(), ProductResponseDto.class);
+    }
+
+    private ProductResponseDto createProduct() throws Exception {
+        return createProduct(5);
     }
 
     private OrderResponseDto createOrder(ProductResponseDto createdProduct) throws Exception {
