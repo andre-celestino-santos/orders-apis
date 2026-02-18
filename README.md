@@ -2,11 +2,7 @@
 
 # 🗳 Orders API
 
-## 📌 Overview
-
 REST API for managing **products**, **orders**, and **stock**.
-
----
 
 ## 📦 Features
 
@@ -23,8 +19,6 @@ REST API for managing **products**, **orders**, and **stock**.
 - Cancel order
 - Stock control
 - Get order by id
-
----
 
 ## 🧱 Architecture
 
@@ -44,27 +38,13 @@ Controller  →  Mapper  →  Service  →  Repository  →  Database
 - OpenAPI (Swagger)
 - Unit and integration tests with JUnit and Mockito
 
----
-
-## 📑 API Documentation
-
-The API endpoints documentation is available via Swagger (OpenAPI), allowing interactive visualization, testing, and API consumption.
-
-After starting the application, the documentation can be accessed at:
-
-http://localhost:8080/swagger-ui.html
-
----
-
-## 🚀 How to run the project
+## 🚀 How to run the API
 
 ### Prerequisites
 - **Apache Maven**: 3.8+
 - **Java JDK**: 17+
 - **Docker**: 27.5+ (optional)
 - **Operating System:** any OS compatible with the versions above of Maven, JDK, and Docker
-
----
 
 ### Run locally
 
@@ -82,7 +62,7 @@ docker run --name orders-apis-mysql-db \
   -d mysql:8
 ```
 
-2. Configure environment variables
+#### 2. Configure environment variables
 
 ```bash
 export SPRING_DATASOURCE_PASSWORD="orders-apis-pass" \
@@ -90,8 +70,14 @@ export SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3306/orders-apis-db?useSSL=
 export SPRING_DATASOURCE_USERNAME="orders-apis-user"
 ```
 
-3. Run the application
+#### 3. Run the API
 
 ```bash
 mvn spring-boot:run
 ```
+
+## 📑 API Documentation
+
+The API endpoints documentation is available via Swagger (OpenAPI), allowing interactive visualization, testing, and API consumption.
+
+After starting the API, the documentation can be accessed at: <a href="http://localhost:8080/swagger-ui.html">📑 Documentation</a>
