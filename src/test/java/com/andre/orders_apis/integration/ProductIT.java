@@ -16,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
+@Sql(scripts = "classpath:auth.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 public class ProductIT {
 
     @Autowired
@@ -49,11 +51,25 @@ public class ProductIT {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private TokenGeneratorTests tokenGeneratorTests;
+
+    private String adminToken;
+    private String userToken;
+
     @BeforeEach
     public void beforeEach() {
         orderItemRepository.deleteAll();
         orderRepository.deleteAll();
         productRepository.deleteAll();
+
+        if (adminToken == null) {
+            adminToken = tokenGeneratorTests.getToken("test-admin-user");
+        }
+
+        if (userToken == null){
+            userToken = tokenGeneratorTests.getToken("test-user");
+        }
     }
 
     @Test
@@ -69,6 +85,7 @@ public class ProductIT {
         String content = objectMapper.writeValueAsString(request);
 
         MvcResult result = mockMvc.perform(post("/v1/products")
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().isCreated())
@@ -111,6 +128,7 @@ public class ProductIT {
         String createContent = objectMapper.writeValueAsString(createRequest);
 
         MvcResult result = mockMvc.perform(post("/v1/products")
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createContent))
                 .andExpect(status().isCreated())
@@ -126,6 +144,7 @@ public class ProductIT {
         String updateContent = objectMapper.writeValueAsString(updateRequest);
 
         mockMvc.perform(patch("/v1/products/%s".formatted(createResponse.getId()))
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateContent))
                 .andExpect(status().isOk())
@@ -137,6 +156,7 @@ public class ProductIT {
     public void shouldReturnNotFoundWhenUpdateProductNotFound() throws Exception {
         Integer id = 999;
         mockMvc.perform(patch("/v1/products/%s".formatted(id))
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"description": "new description"}
@@ -159,6 +179,7 @@ public class ProductIT {
         String createContent = objectMapper.writeValueAsString(createRequest);
 
         MvcResult result = mockMvc.perform(post("/v1/products")
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createContent))
                 .andExpect(status().isCreated())
@@ -168,6 +189,7 @@ public class ProductIT {
         ProductResponseDto createResponse = objectMapper.readValue(responseAsString, ProductResponseDto.class);
 
         mockMvc.perform(delete("/v1/products/%s".formatted(createResponse.getId()))
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
     }
@@ -176,6 +198,7 @@ public class ProductIT {
     public void shouldReturnNotFoundWhenDeleteProductNotFound() throws Exception {
         Integer id = 999;
         mockMvc.perform(delete("/v1/products/%s".formatted(id))
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(OrderApiError.PRODUCT_NOT_FOUND.getCode()))
@@ -197,13 +220,14 @@ public class ProductIT {
         MvcResult result = null;
         for (int i = 0; i < 21; i++){
             result = mockMvc.perform(post("/v1/products")
+                            .header("Authorization", adminToken)
                             .contentType(MediaType.APPLICATION_JSON)
-
                             .content(content))
                     .andExpect(status().isCreated()).andReturn();
         }
 
         mockMvc.perform(get("/v1/products?category=SMARTPHONE")
+                        .header("Authorization", userToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(0))
@@ -221,10 +245,12 @@ public class ProductIT {
         ProductResponseDto createResponse = objectMapper.readValue(responseAsString, ProductResponseDto.class);
 
         mockMvc.perform(delete("/v1/products/%s".formatted(createResponse.getId()))
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/v1/products?category=SMARTPHONE")
+                        .header("Authorization", userToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(0))
@@ -241,12 +267,32 @@ public class ProductIT {
     @Test
     public void shouldReturnEmptyContentWhenThereAreNoProduct() throws Exception {
         mockMvc.perform(get("/v1/products?category=SMARTPHONE")
+                        .header("Authorization", userToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(0))
                 .andExpect(jsonPath("$.totalElements").value(0))
                 .andExpect(jsonPath("$.totalPages").value(0))
                 .andExpect(jsonPath("$.content").isEmpty());
+    }
+
+    @Test
+    public void shouldReturnForbiddenWithUserWithoutAdminRole() throws Exception {
+        ProductRequestDto request = new ProductRequestDto();
+        request.setBrand("Samsung");
+        request.setModel("A07");
+        request.setPrice(new BigDecimal("594.00"));
+        request.setCategory(Category.SMARTPHONE);
+        request.setStockQuantity(5);
+        request.setDescription("Samsung Galaxy A07 128gb, 4gb");
+
+        String content = objectMapper.writeValueAsString(request);
+
+        mockMvc.perform(post("/v1/products")
+                        .header("Authorization", userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isForbidden());
     }
 
 }
