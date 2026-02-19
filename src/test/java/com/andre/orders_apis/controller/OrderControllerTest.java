@@ -8,12 +8,14 @@ import com.andre.orders_apis.entity.Order;
 import com.andre.orders_apis.entity.OrderStatus;
 import com.andre.orders_apis.enums.OrderApiError;
 import com.andre.orders_apis.exception.ResourceNotFoundException;
+import com.andre.orders_apis.filter.JwtAuthenticationFilter;
 import com.andre.orders_apis.mapper.OrderMapper;
 import com.andre.orders_apis.service.OrderService;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -26,12 +28,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(OrderController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class OrderControllerTest {
 
     @Autowired
@@ -45,6 +47,9 @@ public class OrderControllerTest {
 
     @MockitoBean
     private OrderMapper orderMapper;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     public void shouldCreateOrderSuccessfully() throws Exception {
@@ -89,7 +94,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(content))
-                .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(header().string(HttpHeaders.LOCATION, Matchers.endsWith("/v1/orders/%s".formatted(response.getId()))))
                 .andExpect(jsonPath("$.id").value(response.getId()))
@@ -127,7 +131,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.customerId").value("must not be blank"));
 
@@ -156,7 +159,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.customerId").value("must not be blank"));
 
@@ -185,7 +187,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.customerId").value("must not be blank"));
 
@@ -206,7 +207,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.items").value("must not be empty"));
 
@@ -230,7 +230,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.items").value("must not be empty"));
 
@@ -259,7 +258,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.['items[0].id']").value("must not be null"));
 
@@ -288,7 +286,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.['items[0].id']").value("must be greater than or equal to 1"));
 
@@ -317,7 +314,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.['items[0].id']").value("must be greater than or equal to 1"));
 
@@ -346,7 +342,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.['items[0].quantity']").value("must not be null"));
 
@@ -375,7 +370,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.['items[0].quantity']").value("must be greater than or equal to 1"));
 
@@ -404,7 +398,6 @@ public class OrderControllerTest {
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.['items[0].quantity']").value("must be greater than or equal to 1"));
 
@@ -420,7 +413,6 @@ public class OrderControllerTest {
         Mockito.doNothing().when(orderService).cancel(Mockito.any());
 
         mockMvc.perform(post("/v1/orders/76/cancel"))
-                        .andDo(print())
                         .andExpect(status().isNoContent());
 
         Mockito.verify(orderService, Mockito.atMostOnce()).cancel(Mockito.any());
@@ -435,7 +427,6 @@ public class OrderControllerTest {
         Mockito.doThrow(resourceNotFoundException).when(orderService).cancel(Mockito.any());
 
         mockMvc.perform(post("/v1/orders/76/cancel"))
-                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(OrderApiError.ORDER_NOT_FOUND.getCode()))
                 .andExpect(jsonPath("$.message").value(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(orderId)));
