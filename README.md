@@ -62,6 +62,12 @@ docker run --name orders-apis-mysql-db \
   -d mysql:8
 ```
 
+Insert some user roles for authorization
+
+```sql
+INSERT INTO roles (name) VALUES ('ROLE_ADMIN'), ('ROLE_USER');
+```
+
 #### 2. Configure environment variables
 
 ```bash
