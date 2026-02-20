@@ -24,6 +24,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
@@ -38,12 +39,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
+@Sql(scripts = "classpath:auth.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 public class OrderIT {
 
     @Autowired
@@ -61,11 +62,25 @@ public class OrderIT {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private TokenGeneratorTests tokenGeneratorTests;
+
+    private String adminToken;
+    private String userToken;
+
     @BeforeEach
     public void beforeEach() {
         orderItemRepository.deleteAll();
         orderRepository.deleteAll();
         productRepository.deleteAll();
+
+        if (adminToken == null) {
+            adminToken = tokenGeneratorTests.getToken("test-admin-user");
+        }
+
+        if (userToken == null) {
+            userToken = tokenGeneratorTests.getToken("test-user");
+        }
     }
 
     @Test
@@ -86,9 +101,9 @@ public class OrderIT {
         String content = objectMapper.writeValueAsString(request);
 
         MvcResult result = mockMvc.perform(post("/v1/orders")
+                        .header("Authorization", userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -141,6 +156,7 @@ public class OrderIT {
         Runnable task = () -> {
             try {
                 MvcResult result = mockMvc.perform(post("/v1/orders")
+                                .header("Authorization", userToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(content))
                         .andReturn();
@@ -184,9 +200,9 @@ public class OrderIT {
         String content = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/v1/orders")
+                        .header("Authorization", userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.items").value("must not be empty"));
     }
@@ -207,9 +223,9 @@ public class OrderIT {
         String content = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/v1/orders")
+                        .header("Authorization", userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(OrderApiError.PRODUCT_NOT_FOUND.getCode()))
                 .andExpect(jsonPath("$.message").value(OrderApiError.PRODUCT_NOT_FOUND.getMessage().formatted(itemRequest.getId())));
@@ -233,9 +249,9 @@ public class OrderIT {
         String content = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/v1/orders")
+                        .header("Authorization", userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(OrderApiError.PRODUCT_INSUFFICIENT_STOCK_QUANTITY.getCode()))
                 .andExpect(jsonPath("$.message").value(OrderApiError.PRODUCT_INSUFFICIENT_STOCK_QUANTITY.getMessage()
@@ -292,8 +308,8 @@ public class OrderIT {
     public void shouldReturnNotFoundWhenCancelOrderNotFound() throws Exception {
         Long orderId = 999L;
 
-        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(orderId)))
-                .andDo(print())
+        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(orderId))
+                        .header("Authorization", userToken))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(OrderApiError.ORDER_NOT_FOUND.getCode()))
                 .andExpect(jsonPath("$.message").value(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(orderId)));
@@ -311,9 +327,9 @@ public class OrderIT {
         String content = objectMapper.writeValueAsString(request);
 
         MvcResult result = mockMvc.perform(post("/v1/products")
+                        .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -339,9 +355,9 @@ public class OrderIT {
         String content = objectMapper.writeValueAsString(request);
 
         MvcResult result = mockMvc.perform(post("/v1/orders")
+                        .header("Authorization", userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -351,8 +367,8 @@ public class OrderIT {
     }
 
     private void cancelOrder(Long id) throws Exception {
-        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(id)))
-                .andDo(print())
+        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(id))
+                        .header("Authorization", userToken))
                 .andExpect(status().isNoContent());
     }
 

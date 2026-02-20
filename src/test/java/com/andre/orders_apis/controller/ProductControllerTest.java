@@ -4,12 +4,14 @@ import com.andre.orders_apis.dto.ProductRequestDto;
 import com.andre.orders_apis.dto.ProductResponseDto;
 import com.andre.orders_apis.entity.Category;
 import com.andre.orders_apis.entity.Product;
+import com.andre.orders_apis.filter.JwtAuthenticationFilter;
 import com.andre.orders_apis.mapper.ProductMapper;
 import com.andre.orders_apis.service.ProductService;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -31,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ProductController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class ProductControllerTest {
 
     @Autowired
@@ -44,6 +47,9 @@ public class ProductControllerTest {
 
     @MockitoBean
     private ProductMapper productMapper;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     public void shouldCreateProductSuccessfully() throws Exception {
