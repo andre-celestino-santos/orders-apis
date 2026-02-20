@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Orders API - Front</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<h1>📦 Orders API</h1>
+
+<section>
+    <h2>Listar Produtos</h2>
+
+    <select id="category">
+        <option value="SMARTPHONE">SMARTPHONE</option>
+        <option value="ELECTRONICS">ELECTRONICS</option>
+        <option value="NOTEBOOK">NOTEBOOK</option>
+        <option value="TABLET">TABLET</option>
+        <option value="ACCESSORIES">ACCESSORIES</option>
+    </select>
+
+    <button onclick="loadProducts()">Buscar</button>
+
+    <div id="products"></div>
+
+    <div class="pagination">
+        <button onclick="prevPage()">⬅</button>
+        <span id="pageInfo"></span>
+        <button onclick="nextPage()">➡</button>
+    </div>
+</section>
+
+<hr>
+
+<section>
+    <h2>➕ Criar Produto</h2>
+
+    <input id="brand" placeholder="Brand">
+    <input id="model" placeholder="Model">
+    <input id="price" placeholder="Price" type="number">
+    <input id="stock" placeholder="Stock" type="number">
+    <input id="description" placeholder="Description">
+
+    <select id="createCategory">
+        <option value="SMARTPHONE">SMARTPHONE</option>
+        <option value="ELECTRONICS">ELECTRONICS</option>
+        <option value="NOTEBOOK">NOTEBOOK</option>
+        <option value="TABLET">TABLET</option>
+        <option value="ACCESSORIES">ACCESSORIES</option>
+    </select>
+
+    <button onclick="createProduct()">Criar</button>
+</section>
+
+<hr>
+
+<section>
+    <h2>🛒 Criar Pedido</h2>
+
+    <input id="customerId" placeholder="Customer ID">
+    <input id="productId" placeholder="Product ID">
+    <input id="quantity" placeholder="Quantity">
+
+    <button onclick="createOrder()">Criar Pedido</button>
+
+    <pre id="orderResult"></pre>
+</section>
+
+<hr>
+
+<section>
+    <h2>❌ Cancelar Pedido</h2>
+
+    <input id="cancelOrderId" placeholder="Order ID">
+    <button onclick="cancelOrder()">Cancelar</button>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
