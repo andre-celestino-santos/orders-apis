@@ -5,13 +5,14 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 public class OrderItemRequestDto {
 
     @NotNull
-    @Min(1)
-    private Long id;
+    private UUID id;
 
     @NotNull
     @Min(1)

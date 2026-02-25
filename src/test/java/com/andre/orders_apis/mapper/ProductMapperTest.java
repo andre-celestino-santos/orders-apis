@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 public class ProductMapperTest {
 
@@ -30,6 +31,7 @@ public class ProductMapperTest {
         Product entity = productMapper.toEntity(request);
 
         Assertions.assertThat(entity.getId()).isNull();
+        Assertions.assertThat(entity.getPublicId()).isNull();
         Assertions.assertThat(entity.getBrand()).isEqualTo(request.getBrand());
         Assertions.assertThat(entity.getModel()).isEqualTo(request.getModel());
         Assertions.assertThat(entity.getPrice()).isEqualByComparingTo(request.getPrice());
@@ -45,6 +47,7 @@ public class ProductMapperTest {
     public void shouldReturnResponseSuccessfully() {
         Product product = new Product();
         product.setId(1L);
+        product.setPublicId(UUID.randomUUID());
         product.setBrand("Samsung");
         product.setModel("A07");
         product.setPrice(new BigDecimal("594.00"));
@@ -56,7 +59,7 @@ public class ProductMapperTest {
 
         ProductResponseDto response = productMapper.toResponse(product);
 
-        Assertions.assertThat(response.getId()).isEqualTo(product.getId());
+        Assertions.assertThat(response.getId()).isEqualTo(product.getPublicId());
         Assertions.assertThat(response.getBrand()).isEqualTo(product.getBrand());
         Assertions.assertThat(response.getModel()).isEqualTo(product.getModel());
         Assertions.assertThat(response.getPrice()).isEqualByComparingTo(product.getPrice());
@@ -76,10 +79,12 @@ public class ProductMapperTest {
         request.setCategory(Category.SMARTPHONE);
         request.setStockQuantity(5);
         request.setDescription("Samsung Galaxy A07 128gb, 4gb");
+        final UUID publicId = UUID.randomUUID();
 
-        Product entity = productMapper.toEntity(1L, request);
+        Product entity = productMapper.toEntity(publicId, request);
 
-        Assertions.assertThat(entity.getId()).isEqualTo(1);
+        Assertions.assertThat(entity.getId()).isNull();
+        Assertions.assertThat(entity.getPublicId()).isEqualTo(publicId);
         Assertions.assertThat(entity.getBrand()).isEqualTo(request.getBrand());
         Assertions.assertThat(entity.getModel()).isEqualTo(request.getModel());
         Assertions.assertThat(entity.getPrice()).isEqualByComparingTo(request.getPrice());
@@ -95,6 +100,7 @@ public class ProductMapperTest {
     public void shouldReturnPageResponseSuccessfully() {
         Product product = new Product();
         product.setId(1L);
+        product.setPublicId(UUID.randomUUID());
         product.setBrand("Samsung");
         product.setModel("A07");
         product.setPrice(new BigDecimal("594.00"));

@@ -24,7 +24,7 @@ public class OrderMapper {
 
     public OrderResponseDto toResponse(Order entity) {
         OrderResponseDto response = new OrderResponseDto();
-        response.setId(entity.getId());
+        response.setId(entity.getPublicId());
         response.setCustomerId(entity.getCustomerId());
         response.setStatus(entity.getStatus());
         response.setCreatedAt(entity.getCreatedAt());
@@ -38,14 +38,14 @@ public class OrderMapper {
         OrderItem entity = new OrderItem();
         entity.setQuantity(request.getQuantity());
         Product productEntity = new Product();
-        productEntity.setId(request.getId());
+        productEntity.setPublicId(request.getId());
         entity.setProduct(productEntity);
         return entity;
     }
 
     private OrderItemResponseDto toResponse(OrderItem entity) {
         OrderItemResponseDto response = new OrderItemResponseDto();
-        response.setId(entity.getProduct().getId());
+        response.setId(entity.getProduct().getPublicId());
         response.setQuantity(entity.getQuantity());
         response.setCreatedAt(entity.getCreatedAt());
         return response;

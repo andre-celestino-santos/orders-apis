@@ -26,6 +26,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -59,7 +60,7 @@ public class OrderControllerTest {
         List<OrderItemRequestDto> requestItems = new ArrayList<>();
         OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setQuantity(2);
-        itemRequest.setId(3L);
+        itemRequest.setId(UUID.randomUUID());
         requestItems.add(itemRequest);
 
         request.setItems(requestItems);
@@ -68,11 +69,12 @@ public class OrderControllerTest {
 
         Order order = new Order();
         order.setId(27L);
+        order.setPublicId(UUID.randomUUID());
 
         Mockito.when(orderService.create(Mockito.any())).thenReturn(order);
 
         OrderResponseDto response = new OrderResponseDto();
-        response.setId(order.getId());
+        response.setId(order.getPublicId());
         response.setCustomerId(request.getCustomerId());
         response.setStatus(OrderStatus.CREATED);
         response.setCreatedAt(LocalDateTime.now());
@@ -96,13 +98,13 @@ public class OrderControllerTest {
                 .content(content))
                 .andExpect(status().isCreated())
                 .andExpect(header().string(HttpHeaders.LOCATION, Matchers.endsWith("/v1/orders/%s".formatted(response.getId()))))
-                .andExpect(jsonPath("$.id").value(response.getId()))
+                .andExpect(jsonPath("$.id").value(response.getId().toString()))
                 .andExpect(jsonPath("$.customerId").value(response.getCustomerId()))
                 .andExpect(jsonPath("$.status").value(response.getStatus().name()))
                 .andExpect(jsonPath("$.createdAt").isNotEmpty())
                 .andExpect(jsonPath("$.updatedAt").isNotEmpty())
                 .andExpect(jsonPath("$.items").isArray())
-                .andExpect(jsonPath("$.items[0].id").value(itemResponse.getId()))
+                .andExpect(jsonPath("$.items[0].id").value(itemResponse.getId().toString()))
                 .andExpect(jsonPath("$.items[0].quantity").value(itemResponse.getQuantity()))
                 .andExpect(jsonPath("$.items[0].createdAt").isNotEmpty());
 
@@ -121,7 +123,7 @@ public class OrderControllerTest {
         List<OrderItemRequestDto> requestItems = new ArrayList<>();
         OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setQuantity(2);
-        itemRequest.setId(3L);
+        itemRequest.setId(UUID.randomUUID());
         requestItems.add(itemRequest);
 
         request.setItems(requestItems);
@@ -149,7 +151,7 @@ public class OrderControllerTest {
         List<OrderItemRequestDto> requestItems = new ArrayList<>();
         OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setQuantity(2);
-        itemRequest.setId(3L);
+        itemRequest.setId(UUID.randomUUID());
         requestItems.add(itemRequest);
 
         request.setItems(requestItems);
@@ -177,7 +179,7 @@ public class OrderControllerTest {
         List<OrderItemRequestDto> requestItems = new ArrayList<>();
         OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setQuantity(2);
-        itemRequest.setId(3L);
+        itemRequest.setId(UUID.randomUUID());
         requestItems.add(itemRequest);
 
         request.setItems(requestItems);
@@ -269,53 +271,22 @@ public class OrderControllerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestWhenCreateOrderWithItemIdZero() throws Exception {
-        OrderRequestDto request = new OrderRequestDto();
-        request.setCustomerId("abc123");
-
-        List<OrderItemRequestDto> requestItems = new ArrayList<>();
-        OrderItemRequestDto itemRequest = new OrderItemRequestDto();
-        itemRequest.setQuantity(2);
-        itemRequest.setId(0L);
-        requestItems.add(itemRequest);
-
-        request.setItems(requestItems);
-
-        String content = objectMapper.writeValueAsString(request);
+    public void shouldReturnBadRequestWhenCreateOrderWithItemIdInvalid() throws Exception {
+        String content = """
+                {
+                  "customerId" : "abc123",
+                  "items" : [ {
+                    "id" : "abc123",
+                    "quantity" : 2
+                  } ]
+                }""";
 
         mockMvc.perform(post("/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.['items[0].id']").value("must be greater than or equal to 1"));
-
-        Mockito.verify(orderMapper, Mockito.never()).toEntity(Mockito.any());
-
-        Mockito.verify(orderService, Mockito.never()).create(Mockito.any());
-
-        Mockito.verify(orderMapper, Mockito.never()).toEntity(Mockito.any());
-    }
-
-    @Test
-    public void shouldReturnBadRequestWhenCreateOrderWithItemIdNegative() throws Exception {
-        OrderRequestDto request = new OrderRequestDto();
-        request.setCustomerId("abc123");
-
-        List<OrderItemRequestDto> requestItems = new ArrayList<>();
-        OrderItemRequestDto itemRequest = new OrderItemRequestDto();
-        itemRequest.setQuantity(2);
-        itemRequest.setId(-1L);
-        requestItems.add(itemRequest);
-
-        request.setItems(requestItems);
-
-        String content = objectMapper.writeValueAsString(request);
-
-        mockMvc.perform(post("/v1/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(content))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.['items[0].id']").value("must be greater than or equal to 1"));
+                .andExpect(jsonPath("$.['items[0].id']").value("""
+                        JSON parse error: Cannot deserialize value of type `java.util.UUID` from String "abc123": UUID has to be represented by standard 36-char representation"""));
 
         Mockito.verify(orderMapper, Mockito.never()).toEntity(Mockito.any());
 
@@ -332,7 +303,7 @@ public class OrderControllerTest {
         List<OrderItemRequestDto> requestItems = new ArrayList<>();
         OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setQuantity(null);
-        itemRequest.setId(32L);
+        itemRequest.setId(UUID.randomUUID());
         requestItems.add(itemRequest);
 
         request.setItems(requestItems);
@@ -360,7 +331,7 @@ public class OrderControllerTest {
         List<OrderItemRequestDto> requestItems = new ArrayList<>();
         OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setQuantity(0);
-        itemRequest.setId(32L);
+        itemRequest.setId(UUID.randomUUID());
         requestItems.add(itemRequest);
 
         request.setItems(requestItems);
@@ -388,7 +359,7 @@ public class OrderControllerTest {
         List<OrderItemRequestDto> requestItems = new ArrayList<>();
         OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setQuantity(-2);
-        itemRequest.setId(32L);
+        itemRequest.setId(UUID.randomUUID());
         requestItems.add(itemRequest);
 
         request.setItems(requestItems);
@@ -410,9 +381,11 @@ public class OrderControllerTest {
 
     @Test
     public void shouldCancelOrderSuccessfully() throws Exception {
+        UUID publicId = UUID.randomUUID();
+
         Mockito.doNothing().when(orderService).cancel(Mockito.any());
 
-        mockMvc.perform(post("/v1/orders/76/cancel"))
+        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(publicId)))
                         .andExpect(status().isNoContent());
 
         Mockito.verify(orderService, Mockito.atMostOnce()).cancel(Mockito.any());
@@ -420,18 +393,28 @@ public class OrderControllerTest {
 
     @Test
     public void shouldReturnNotFoundWhenCancelOrderNotFound() throws Exception {
-        Long orderId = 999L;
+        UUID publicId = UUID.randomUUID();
 
-        ResourceNotFoundException resourceNotFoundException = new ResourceNotFoundException(OrderApiError.ORDER_NOT_FOUND, orderId);
+        ResourceNotFoundException resourceNotFoundException = new ResourceNotFoundException(OrderApiError.ORDER_NOT_FOUND, publicId);
 
         Mockito.doThrow(resourceNotFoundException).when(orderService).cancel(Mockito.any());
 
-        mockMvc.perform(post("/v1/orders/76/cancel"))
+        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(publicId)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(OrderApiError.ORDER_NOT_FOUND.getCode()))
-                .andExpect(jsonPath("$.message").value(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(orderId)));
+                .andExpect(jsonPath("$.message").value(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(publicId)));
 
         Mockito.verify(orderService, Mockito.atMostOnce()).cancel(Mockito.any());
+    }
+
+    @Test
+    public void shouldReturnBadRequestWhenCancelOrderWithInvalidId() throws Exception {
+        String publicId = "abc123";
+
+        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(publicId)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.id").value("""
+                        Method parameter 'id': Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'; Invalid UUID string: abc123"""));
     }
 
 }

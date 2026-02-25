@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class OrderMapperTest {
 
@@ -26,7 +27,7 @@ public class OrderMapperTest {
 
         List<OrderItemRequestDto> items = new ArrayList<>();
         OrderItemRequestDto item = new OrderItemRequestDto();
-        item.setId(1L);
+        item.setId(UUID.randomUUID());
         item.setQuantity(10);
         items.add(item);
 
@@ -36,6 +37,7 @@ public class OrderMapperTest {
 
         Assertions.assertThat(entity).isNotNull();
         Assertions.assertThat(entity.getId()).isNull();
+        Assertions.assertThat(entity.getPublicId()).isNull();
         Assertions.assertThat(entity.getCustomerId()).isEqualTo(request.getCustomerId());
         Assertions.assertThat(entity.getStatus()).isEqualTo(OrderStatus.CREATED);
         Assertions.assertThat(entity.getCreatedAt()).isNull();
@@ -51,13 +53,15 @@ public class OrderMapperTest {
 
         Product productEntity = itemEntity.getProduct();
         Assertions.assertThat(productEntity).isNotNull();
-        Assertions.assertThat(productEntity.getId()).isEqualTo(item.getId());
+        Assertions.assertThat(productEntity.getId()).isNull();
+        Assertions.assertThat(productEntity.getPublicId()).isEqualTo(item.getId());
     }
 
     @Test
     public void shouldReturnResponseSuccessfully() {
         Order entity = new Order();
         entity.setId(1L);
+        entity.setPublicId(UUID.randomUUID());
         entity.setCustomerId("abc123");
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
@@ -66,6 +70,7 @@ public class OrderMapperTest {
         OrderItem itemEntity = new OrderItem();
         Product product = new Product();
         product.setId(5L);
+        product.setPublicId(UUID.randomUUID());
         itemEntity.setProduct(product);
         itemEntity.setQuantity(7);
         itemEntity.setCreatedAt(LocalDateTime.now());
@@ -75,7 +80,7 @@ public class OrderMapperTest {
         OrderResponseDto response = orderMapper.toResponse(entity);
         
         Assertions.assertThat(response).isNotNull();
-        Assertions.assertThat(response.getId()).isEqualTo(entity.getId());
+        Assertions.assertThat(response.getId()).isEqualTo(entity.getPublicId());
         Assertions.assertThat(response.getCustomerId()).isEqualTo(entity.getCustomerId());
         Assertions.assertThat(response.getStatus()).isEqualTo(entity.getStatus());
         Assertions.assertThat(response.getCreatedAt()).isEqualTo(entity.getCreatedAt());
@@ -85,7 +90,7 @@ public class OrderMapperTest {
         Assertions.assertThat(responseItems).hasSize(1);
 
         OrderItemResponseDto responseItem = responseItems.get(0);
-        Assertions.assertThat(responseItem.getId()).isEqualTo(itemEntity.getProduct().getId());
+        Assertions.assertThat(responseItem.getId()).isEqualTo(itemEntity.getProduct().getPublicId());
         Assertions.assertThat(responseItem.getQuantity()).isEqualTo(itemEntity.getQuantity());
         Assertions.assertThat(responseItem.getCreatedAt()).isEqualTo(itemEntity.getCreatedAt());
     }

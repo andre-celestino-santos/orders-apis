@@ -7,12 +7,13 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 public class OrderResponseDto {
 
-    private Long id;
+    private UUID id;
     private String customerId;
     private OrderStatus status;
 

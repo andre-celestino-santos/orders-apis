@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/orders")
@@ -34,7 +35,7 @@ public class OrderController {
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(order.getId())
+                .buildAndExpand(order.getPublicId())
                 .toUri();
 
         OrderResponseDto response = orderMapper.toResponse(order);
@@ -43,7 +44,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<Void> cancel(@PathVariable Long id) {
+    public ResponseEntity<Void> cancel(@PathVariable UUID id) {
         orderService.cancel(id);
 
         return ResponseEntity.noContent().build();
