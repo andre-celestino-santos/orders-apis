@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,10 +27,10 @@ public class ProductService {
 
     @Transactional
     public Product update(Product product) {
-        Optional<Product> productOpt = productRepository.findByIdAndActiveTrue(product.getId());
+        Optional<Product> productOpt = productRepository.findByPublicIdAndActiveTrue(product.getPublicId());
 
         if (productOpt.isEmpty()) {
-            throw new ResourceNotFoundException(OrderApiError.PRODUCT_NOT_FOUND, product.getId());
+            throw new ResourceNotFoundException(OrderApiError.PRODUCT_NOT_FOUND, product.getPublicId());
         }
 
         Product productUpdate = productOpt.get();
@@ -40,11 +41,11 @@ public class ProductService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        Optional<Product> productOpt = productRepository.findByIdAndActiveTrue(id);
+    public void delete(UUID publicId) {
+        Optional<Product> productOpt = productRepository.findByPublicIdAndActiveTrue(publicId);
 
         if (productOpt.isEmpty()) {
-            throw new ResourceNotFoundException(OrderApiError.PRODUCT_NOT_FOUND, id);
+            throw new ResourceNotFoundException(OrderApiError.PRODUCT_NOT_FOUND, publicId);
         }
 
         Product productDelete = productOpt.get();

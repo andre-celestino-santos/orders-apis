@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +34,12 @@ public class OrderService {
 
             orderItem.setOrder(savedOrder);
 
-            Long productId = orderItem.getProduct().getId();
+            UUID publicId = orderItem.getProduct().getPublicId();
 
-            Optional<Product> optProduct = productRepository.findByIdAndActiveTrueForUpdate(productId);
+            Optional<Product> optProduct = productRepository.findByPublicIdAndActiveTrueForUpdate(publicId);
 
             if (optProduct.isEmpty()) {
-                throw new ResourceNotFoundException(OrderApiError.PRODUCT_NOT_FOUND, productId);
+                throw new ResourceNotFoundException(OrderApiError.PRODUCT_NOT_FOUND, publicId);
             }
 
             Product product = optProduct.get();
@@ -47,7 +48,7 @@ public class OrderService {
             Integer stockQuantity = product.getStockQuantity();
 
             if (requiredQuantity > stockQuantity) {
-                throw new BusinessException(OrderApiError.PRODUCT_INSUFFICIENT_STOCK_QUANTITY, requiredQuantity, productId, stockQuantity);
+                throw new BusinessException(OrderApiError.PRODUCT_INSUFFICIENT_STOCK_QUANTITY, requiredQuantity, publicId, stockQuantity);
             }
 
             Integer newStockQuantity = stockQuantity - requiredQuantity;
@@ -65,11 +66,11 @@ public class OrderService {
     }
 
     @Transactional
-    public void cancel(Long id) {
-        Optional<Order> optOrder = orderRepository.findById(id);
+    public void cancel(UUID publicId) {
+        Optional<Order> optOrder = orderRepository.findByPublicId(publicId);
 
         if (optOrder.isEmpty()) {
-            throw new ResourceNotFoundException(OrderApiError.ORDER_NOT_FOUND, id);
+            throw new ResourceNotFoundException(OrderApiError.ORDER_NOT_FOUND, publicId);
         }
 
         Order order = optOrder.get();

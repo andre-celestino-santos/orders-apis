@@ -38,7 +38,7 @@ public class ProductRepositoryTest {
     public void shouldReturnActiveProductSuccessfully() {
         Product savedProduct = createProduct();
 
-        Optional<Product> activeProduct = productRepository.findByIdAndActiveTrue(savedProduct.getId());
+        Optional<Product> activeProduct = productRepository.findByPublicIdAndActiveTrue(savedProduct.getPublicId());
         Assertions.assertThat(activeProduct).isPresent();
     }
 
@@ -102,7 +102,7 @@ public class ProductRepositoryTest {
     public void shouldReturnActiveProductForUpdateSuccessfully() {
         Product savedProduct = createProduct();
 
-        Optional<Product> activeProduct = productRepository.findByIdAndActiveTrueForUpdate(savedProduct.getId());
+        Optional<Product> activeProduct = productRepository.findByPublicIdAndActiveTrueForUpdate(savedProduct.getPublicId());
         Assertions.assertThat(activeProduct).isPresent();
     }
 
@@ -121,6 +121,7 @@ public class ProductRepositoryTest {
         Product savedProduct = productRepository.save(product);
 
         Assertions.assertThat(savedProduct.getId()).isGreaterThan(0);
+        Assertions.assertThat(savedProduct.getPublicId()).isNotNull();
         Assertions.assertThat(savedProduct.getBrand()).isEqualTo(product.getBrand());
         Assertions.assertThat(savedProduct.getModel()).isEqualTo(product.getModel());
         Assertions.assertThat(savedProduct.getPrice()).isEqualByComparingTo(product.getPrice());

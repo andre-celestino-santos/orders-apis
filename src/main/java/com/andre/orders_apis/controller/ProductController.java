@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/products")
@@ -42,7 +43,7 @@ public class ProductController {
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(product.getId())
+                .buildAndExpand(product.getPublicId())
                 .toUri();
 
         ProductResponseDto response = productMapper.toResponse(product);
@@ -51,7 +52,7 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ProductResponseDto> update(@PathVariable Long id,
+    public ResponseEntity<ProductResponseDto> update(@PathVariable UUID id,
                                                      @RequestBody ProductRequestDto body) {
         Product productRequest = productMapper.toEntity(id, body);
 
@@ -63,7 +64,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         productService.delete(id);
 
         return ResponseEntity.noContent().build();

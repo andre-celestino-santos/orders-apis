@@ -23,6 +23,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -94,7 +95,7 @@ public class ProductIT {
         String responseAsString = result.getResponse().getContentAsString();
         ProductResponseDto response = objectMapper.readValue(responseAsString, ProductResponseDto.class);
 
-        Assertions.assertThat(response.getId()).isGreaterThan(0);
+        Assertions.assertThat(response.getId()).isNotNull();
         Assertions.assertThat(response.getBrand()).isEqualTo(request.getBrand());
         Assertions.assertThat(response.getModel()).isEqualTo(request.getModel());
         Assertions.assertThat(response.getPrice()).isEqualByComparingTo(request.getPrice());
@@ -109,7 +110,7 @@ public class ProductIT {
 
         Assertions.assertThat(headerLocationResponse).endsWith(headerLocationExpected);
 
-        Optional<Product> optProduct = productRepository.findById(response.getId());
+        Optional<Product> optProduct = productRepository.findByPublicId(response.getId());
         Assertions.assertThat(optProduct).isPresent();
         Product product = optProduct.get();
         Assertions.assertThat(product.getActive()).isTrue();
@@ -148,13 +149,13 @@ public class ProductIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateContent))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(createResponse.getId()))
+                .andExpect(jsonPath("$.id").value(createResponse.getId().toString()))
                 .andExpect(jsonPath("$.description").value(updateRequest.getDescription()));
     }
 
     @Test
     public void shouldReturnNotFoundWhenUpdateProductNotFound() throws Exception {
-        Integer id = 999;
+        UUID id = UUID.randomUUID();
         mockMvc.perform(patch("/v1/products/%s".formatted(id))
                         .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -196,7 +197,7 @@ public class ProductIT {
 
     @Test
     public void shouldReturnNotFoundWhenDeleteProductNotFound() throws Exception {
-        Integer id = 999;
+        UUID id = UUID.randomUUID();
         mockMvc.perform(delete("/v1/products/%s".formatted(id))
                         .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON))

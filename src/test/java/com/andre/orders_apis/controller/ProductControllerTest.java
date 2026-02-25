@@ -23,6 +23,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -65,11 +66,12 @@ public class ProductControllerTest {
 
         Product product = new Product();
         product.setId(1L);
+        product.setPublicId(UUID.randomUUID());
 
         Mockito.when(productService.create(Mockito.any())).thenReturn(product);
 
         ProductResponseDto response = new ProductResponseDto();
-        response.setId(1L);
+        response.setId(product.getPublicId());
 
         Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
 
@@ -79,7 +81,7 @@ public class ProductControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(content))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(response.getId()))
+                .andExpect(jsonPath("$.id").value(response.getId().toString()))
                 .andExpect(header().string(HttpHeaders.LOCATION, Matchers.endsWith("/v1/products/%s".formatted(response.getId()))));
     }
 
@@ -92,18 +94,6 @@ public class ProductControllerTest {
         request.setCategory(null);
         request.setStockQuantity(null);
         request.setDescription(null);
-
-        Mockito.when(productMapper.toEntity(Mockito.any())).thenReturn(new Product());
-
-        Product product = new Product();
-        product.setId(1L);
-
-        Mockito.when(productService.create(Mockito.any())).thenReturn(product);
-
-        ProductResponseDto response = new ProductResponseDto();
-        response.setId(1L);
-
-        Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
 
         String content = objectMapper.writeValueAsString(request);
 
@@ -130,18 +120,6 @@ public class ProductControllerTest {
         request.setDescription("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234" +
                 "56789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901");
 
-        Mockito.when(productMapper.toEntity(Mockito.any())).thenReturn(new Product());
-
-        Product product = new Product();
-        product.setId(1L);
-
-        Mockito.when(productService.create(Mockito.any())).thenReturn(product);
-
-        ProductResponseDto response = new ProductResponseDto();
-        response.setId(1L);
-
-        Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
-
         String content = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/v1/products")
@@ -162,23 +140,24 @@ public class ProductControllerTest {
 
         Product product = new Product();
         product.setId(1L);
+        product.setPublicId(UUID.randomUUID());
         product.setDescription("new description");
 
         Mockito.when(productService.update(Mockito.any())).thenReturn(product);
 
         ProductResponseDto response = new ProductResponseDto();
-        response.setId(1L);
+        response.setId(product.getPublicId());
         response.setDescription("new description");
 
         Mockito.when(productMapper.toResponse(Mockito.isA(Product.class))).thenReturn(response);
 
         String content = objectMapper.writeValueAsString(request);
 
-        mockMvc.perform(patch("/v1/products/1")
+        mockMvc.perform(patch("/v1/products/%s".formatted(product.getPublicId()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(response.getId()))
+                .andExpect(jsonPath("$.id").value(response.getId().toString()))
                 .andExpect(jsonPath("$.description").value(response.getDescription()));
     }
 
@@ -186,7 +165,7 @@ public class ProductControllerTest {
     public void shouldDeleteProductSuccessfully() throws Exception {
         Mockito.doNothing().when(productService).delete(Mockito.any());
 
-        mockMvc.perform(delete("/v1/products/1")
+        mockMvc.perform(delete("/v1/products/%s".formatted(UUID.randomUUID()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
     }
@@ -195,6 +174,7 @@ public class ProductControllerTest {
     public void shouldReturnAllActiveProductByCategoryWithPagination() throws Exception {
         Product product = new Product();
         product.setId(1L);
+        product.setPublicId(UUID.randomUUID());
         product.setBrand("Apple");
         product.setModel("Iphone 16");
         product.setCategory(Category.SMARTPHONE);
@@ -204,7 +184,7 @@ public class ProductControllerTest {
         Mockito.when(productService.getAllByCategory(Mockito.any(), Mockito.any())).thenReturn(pageSmartphoneProductMock);
 
         ProductResponseDto response = new ProductResponseDto();
-        response.setId(1L);
+        response.setId(product.getPublicId());
         response.setBrand("Apple");
         response.setModel("Iphone 16");
         response.setCategory(Category.SMARTPHONE);
@@ -219,7 +199,7 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.number").value(0))
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.totalPages").value(1))
-                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(product.getPublicId().toString()))
                 .andExpect(jsonPath("$.content[0].brand").value("Apple"))
                 .andExpect(jsonPath("$.content[0].model").value("Iphone 16"))
                 .andExpect(jsonPath("$.content[0].category").value("SMARTPHONE"));

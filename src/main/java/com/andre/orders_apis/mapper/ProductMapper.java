@@ -6,12 +6,14 @@ import com.andre.orders_apis.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class ProductMapper {
 
-    public Product toEntity(Long id, ProductRequestDto productRequestDto){
+    public Product toEntity(UUID publicId, ProductRequestDto productRequestDto){
         Product product = new Product();
-        product.setId(id);
+        product.setPublicId(publicId);
         product.setBrand(productRequestDto.getBrand());
         product.setModel(productRequestDto.getModel());
         product.setPrice(productRequestDto.getPrice());
@@ -27,7 +29,7 @@ public class ProductMapper {
 
     public ProductResponseDto toResponse(Product product) {
         ProductResponseDto productResponseDto = new ProductResponseDto();
-        productResponseDto.setId(product.getId());
+        productResponseDto.setId(product.getPublicId());
         productResponseDto.setBrand(product.getBrand());
         productResponseDto.setModel(product.getModel());
         productResponseDto.setPrice(product.getPrice());

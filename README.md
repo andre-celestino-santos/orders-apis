@@ -86,4 +86,4 @@ mvn spring-boot:run
 
 The API endpoints documentation is available via Swagger (OpenAPI), allowing interactive visualization, testing, and API consumption.
 
-After starting the API, the documentation can be accessed at: <a href="http://localhost:8080/swagger-ui.html">📑 Documentation</a>
+After starting the API, the documentation can be accessed at: <a href="http://localhost:8080/swagger-ui/index.html">📑 Documentation</a>

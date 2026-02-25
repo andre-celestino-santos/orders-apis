@@ -10,14 +10,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ProductRepository extends CrudRepository<Product, Long> {
 
-    Optional<Product> findByIdAndActiveTrue(Long id);
+    Optional<Product> findByPublicId(UUID publicId);
+
+    Optional<Product> findByPublicIdAndActiveTrue(UUID publicId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select p from Product p where p.id = :id and p.active = true")
-    Optional<Product> findByIdAndActiveTrueForUpdate(Long id);
+    @Query("select p from Product p where p.publicId = :publicId and p.active = true")
+    Optional<Product> findByPublicIdAndActiveTrueForUpdate(UUID publicId);
 
     Page<Product> findAllByCategoryAndActiveTrue(Category category, Pageable pageable);
 

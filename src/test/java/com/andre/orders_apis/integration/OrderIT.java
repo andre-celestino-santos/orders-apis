@@ -33,6 +33,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -128,7 +129,7 @@ public class OrderIT {
         Assertions.assertThat(responseItem.getQuantity()).isEqualTo(itemRequest.getQuantity());
         Assertions.assertThat(responseItem.getCreatedAt()).isNotNull();
 
-        Optional<Product> optProduct = productRepository.findById(createdProduct.getId());
+        Optional<Product> optProduct = productRepository.findByPublicId(createdProduct.getId());
         Assertions.assertThat(optProduct).isPresent();
         Product product = optProduct.get();
         Assertions.assertThat(product.getStockQuantity()).isEqualTo(3);
@@ -183,7 +184,7 @@ public class OrderIT {
 
         Assertions.assertThat(createdOrderCount.get()).isEqualTo(createdProduct.getStockQuantity());
 
-        Optional<Product> optProduct = productRepository.findById(createdProduct.getId());
+        Optional<Product> optProduct = productRepository.findByPublicId(createdProduct.getId());
         Assertions.assertThat(optProduct).isPresent();
         Product product = optProduct.get();
         Assertions.assertThat(product.getStockQuantity()).isEqualTo(0);
@@ -215,7 +216,7 @@ public class OrderIT {
         List<OrderItemRequestDto> requestItems = new ArrayList<>();
         OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setQuantity(2);
-        itemRequest.setId(999L);
+        itemRequest.setId(UUID.randomUUID());
         requestItems.add(itemRequest);
 
         request.setItems(requestItems);
@@ -266,7 +267,7 @@ public class OrderIT {
 
         cancelOrder(createdOrder.getId());
 
-        Optional<Order> optOrder = orderRepository.findById(createdOrder.getId());
+        Optional<Order> optOrder = orderRepository.findByPublicId(createdOrder.getId());
         Assertions.assertThat(optOrder).isPresent();
 
         Order order = optOrder.get();
@@ -276,7 +277,7 @@ public class OrderIT {
         Assertions.assertThat(items).hasSize(1);
 
         Product product = items.get(0).getProduct();
-        Assertions.assertThat(product.getId()).isEqualTo(createdProduct.getId());
+        Assertions.assertThat(product.getPublicId()).isEqualTo(createdProduct.getId());
         Assertions.assertThat(product.getStockQuantity()).isEqualTo(createdProduct.getStockQuantity());
     }
 
@@ -290,7 +291,7 @@ public class OrderIT {
 
         cancelOrder(createdOrder.getId());
 
-        Optional<Order> optOrder = orderRepository.findById(createdOrder.getId());
+        Optional<Order> optOrder = orderRepository.findByPublicId(createdOrder.getId());
         Assertions.assertThat(optOrder).isPresent();
 
         Order order = optOrder.get();
@@ -300,19 +301,19 @@ public class OrderIT {
         Assertions.assertThat(items).hasSize(1);
 
         Product product = items.get(0).getProduct();
-        Assertions.assertThat(product.getId()).isEqualTo(createdProduct.getId());
+        Assertions.assertThat(product.getPublicId()).isEqualTo(createdProduct.getId());
         Assertions.assertThat(product.getStockQuantity()).isEqualTo(createdProduct.getStockQuantity());
     }
 
     @Test
     public void shouldReturnNotFoundWhenCancelOrderNotFound() throws Exception {
-        Long orderId = 999L;
+        UUID publicId = UUID.randomUUID();
 
-        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(orderId))
+        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(publicId))
                         .header("Authorization", userToken))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(OrderApiError.ORDER_NOT_FOUND.getCode()))
-                .andExpect(jsonPath("$.message").value(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(orderId)));
+                .andExpect(jsonPath("$.message").value(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(publicId)));
     }
 
     private ProductResponseDto createProduct(Integer stockQuantity) throws Exception {
@@ -366,8 +367,8 @@ public class OrderIT {
         return objectMapper.readValue(responseAsString, OrderResponseDto.class);
     }
 
-    private void cancelOrder(Long id) throws Exception {
-        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(id))
+    private void cancelOrder(UUID publicId) throws Exception {
+        mockMvc.perform(post("/v1/orders/%s/cancel".formatted(publicId))
                         .header("Authorization", userToken))
                 .andExpect(status().isNoContent());
     }
