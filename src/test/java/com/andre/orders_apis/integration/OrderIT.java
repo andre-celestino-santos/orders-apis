@@ -16,6 +16,7 @@ import com.andre.orders_apis.repository.OrderItemRepository;
 import com.andre.orders_apis.repository.OrderRepository;
 import com.andre.orders_apis.repository.ProductRepository;
 import org.assertj.core.api.Assertions;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -314,6 +316,29 @@ public class OrderIT {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(OrderApiError.ORDER_NOT_FOUND.getCode()))
                 .andExpect(jsonPath("$.message").value(OrderApiError.ORDER_NOT_FOUND.getMessage().formatted(publicId)));
+    }
+
+    @Test
+    public void shouldAddItemSuccessfully() throws Exception {
+        ProductResponseDto createdProduct = createProduct();
+
+        OrderResponseDto createdOrder = createOrder(createdProduct);
+
+        OrderItemRequestDto request = new OrderItemRequestDto();
+        request.setId(createdProduct.getId());
+        request.setQuantity(1);
+
+        String content = objectMapper.writeValueAsString(request);
+
+        mockMvc.perform(post("/v1/orders/%s/items".formatted(createdOrder.getId()))
+                        .header("Authorization", userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isCreated())
+                .andExpect(header().string(HttpHeaders.LOCATION, Matchers.endsWith("/v1/orders/%s/items/%s".formatted(createdOrder.getId(), createdProduct.getId()))))
+                .andExpect(jsonPath("$.id").value(request.getId().toString()))
+                .andExpect(jsonPath("$.quantity").value(2))
+                .andExpect(jsonPath("$.createdAt").isNotEmpty());
     }
 
     private ProductResponseDto createProduct(Integer stockQuantity) throws Exception {

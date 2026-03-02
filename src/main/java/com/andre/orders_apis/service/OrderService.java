@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,39 +31,43 @@ public class OrderService {
     public Order create(Order order) {
         Order savedOrder = orderRepository.save(order);
 
-        for (OrderItem orderItem : order.getItems()) {
-
-            orderItem.setOrder(savedOrder);
-
-            UUID publicId = orderItem.getProduct().getPublicId();
-
-            Optional<Product> optProduct = productRepository.findByPublicIdAndActiveTrueForUpdate(publicId);
-
-            if (optProduct.isEmpty()) {
-                throw new ResourceNotFoundException(OrderApiError.PRODUCT_NOT_FOUND, publicId);
-            }
-
-            Product product = optProduct.get();
-
-            Integer requiredQuantity = orderItem.getQuantity();
-            Integer stockQuantity = product.getStockQuantity();
-
-            if (requiredQuantity > stockQuantity) {
-                throw new BusinessException(OrderApiError.PRODUCT_INSUFFICIENT_STOCK_QUANTITY, requiredQuantity, publicId, stockQuantity);
-            }
-
-            Integer newStockQuantity = stockQuantity - requiredQuantity;
-
-            product.setStockQuantity(newStockQuantity);
-
-            product = productRepository.save(product);
-
-            orderItem.setProduct(product);
-        }
-
-        orderItemRepository.saveAll(order.getItems());
+        addItem(order, savedOrder);
 
         return savedOrder;
+    }
+
+    @Transactional
+    public Order addItem(Order order) {
+        Optional<Order> optOrder = orderRepository.findByPublicId(order.getPublicId());
+
+        if (optOrder.isEmpty()) {
+            throw new ResourceNotFoundException(OrderApiError.ORDER_NOT_FOUND, order.getPublicId());
+        }
+
+        Order savedOrder = optOrder.get();
+
+        addItem(order, savedOrder);
+
+        Order newSavedOrder = new Order();
+
+        OrderItem orderItem = order.getItems().get(0);
+
+        List<OrderItem> items = new ArrayList<>();
+
+        for (OrderItem item : savedOrder.getItems()) {
+            if (orderItem.getProduct().getPublicId().equals(item.getProduct().getPublicId())) {
+                OrderItem newSavedItem = new OrderItem();
+                newSavedItem.setProduct(item.getProduct());
+                newSavedItem.setQuantity(item.getQuantity());
+                newSavedItem.setCreatedAt(item.getCreatedAt());
+                items.add(newSavedItem);
+                break;
+            }
+        }
+
+        newSavedOrder.setItems(items);
+
+        return newSavedOrder;
     }
 
     @Transactional
@@ -94,6 +99,40 @@ public class OrderService {
 
             productRepository.save(product);
         }
+    }
+
+    private void addItem(Order order, Order savedOrder) {
+        for (OrderItem orderItem : order.getItems()) {
+
+            orderItem.setOrder(savedOrder);
+
+            UUID publicId = orderItem.getProduct().getPublicId();
+
+            Optional<Product> optProduct = productRepository.findByPublicIdAndActiveTrueForUpdate(publicId);
+
+            if (optProduct.isEmpty()) {
+                throw new ResourceNotFoundException(OrderApiError.PRODUCT_NOT_FOUND, publicId);
+            }
+
+            Product product = optProduct.get();
+
+            Integer requiredQuantity = orderItem.getQuantity();
+            Integer stockQuantity = product.getStockQuantity();
+
+            if (requiredQuantity > stockQuantity) {
+                throw new BusinessException(OrderApiError.PRODUCT_INSUFFICIENT_STOCK_QUANTITY, requiredQuantity, publicId, stockQuantity);
+            }
+
+            Integer newStockQuantity = stockQuantity - requiredQuantity;
+
+            product.setStockQuantity(newStockQuantity);
+
+            product = productRepository.save(product);
+
+            orderItem.setProduct(product);
+        }
+
+        orderItemRepository.saveAll(order.getItems());
     }
 
 }
