@@ -273,4 +273,80 @@ public class OrderServiceTest {
         Mockito.verify(productRepository, Mockito.never()).save(Mockito.any());
     }
 
+    @Test
+    public void shouldAddItemSuccessfully() {
+        Product savedProduct = new Product();
+        savedProduct.setId(33L);
+        savedProduct.setPublicId(UUID.randomUUID());
+        savedProduct.setStockQuantity(4);
+
+        Order savedOrder = new Order();
+        savedOrder.setPublicId(UUID.randomUUID());
+        List<OrderItem> savedItems = new ArrayList<>();
+        OrderItem savedItem = new OrderItem();
+        savedItem.setQuantity(1);
+        savedItem.setProduct(savedProduct);
+        savedItems.add(savedItem);
+        savedOrder.setItems(savedItems);
+
+        Optional<Order> optSavedOrder = Optional.of(savedOrder);
+
+        Mockito.when(orderRepository.findByPublicId(Mockito.any())).thenReturn(optSavedOrder);
+
+        Order order = new Order();
+        order.setPublicId(savedOrder.getPublicId());
+        List<OrderItem> items = new ArrayList<>();
+        OrderItem item = new OrderItem();
+        item.setQuantity(2);
+        Product product = new Product();
+        product.setPublicId(savedProduct.getPublicId());
+        item.setProduct(product);
+        items.add(item);
+        order.setItems(items);
+
+        Optional<Product> optProduct = Optional.of(savedProduct);
+
+        Mockito.when(productRepository.findByPublicIdAndActiveTrueForUpdate(Mockito.any())).thenReturn(optProduct);
+
+        Mockito.when(productRepository.save(productCaptor.capture())).thenReturn(product);
+
+        List<OrderItem> newSavedItems = new ArrayList<>();
+
+        Mockito.when(orderItemRepository.saveAll(itemsCaptor.capture())).thenReturn(newSavedItems);
+
+        Order newSavedOrder = orderService.addItem(order);
+
+        Assertions.assertThat(newSavedOrder).isNotNull();
+
+        Mockito.verify(orderRepository, Mockito.atMostOnce()).findByPublicId(Mockito.any());
+
+        Mockito.verify(productRepository, Mockito.atMostOnce()).findByPublicIdAndActiveTrueForUpdate(Mockito.any());
+
+        Mockito.verify(productRepository, Mockito.atMostOnce()).save(Mockito.any());
+
+        Product productCaptorValue = productCaptor.getValue();
+
+        Assertions.assertThat(productCaptorValue.getStockQuantity()).isEqualTo(1);
+
+        Mockito.verify(orderItemRepository, Mockito.atMostOnce()).saveAll(Mockito.any());
+
+        List<OrderItem> itemsCaptorValue = itemsCaptor.getValue();
+
+        Assertions.assertThat(itemsCaptorValue).hasSize(1);
+
+        OrderItem orderItemCaptorValue = itemsCaptorValue.get(0);
+
+        Assertions.assertThat(orderItemCaptorValue.getOrder()).isNotNull();
+        Assertions.assertThat(orderItemCaptorValue.getProduct()).isNotNull();
+
+        List<OrderItem> newSavedOrderItems = newSavedOrder.getItems();
+
+        Assertions.assertThat(newSavedOrderItems).hasSize(1);
+
+        OrderItem newSavedOrderItem = newSavedOrderItems.get(0);
+        Assertions.assertThat(newSavedOrderItem.getProduct().getPublicId()).isEqualTo(savedProduct.getPublicId());
+        Assertions.assertThat(newSavedOrderItem.getQuantity()).isEqualTo(item.getQuantity());
+        Assertions.assertThat(newSavedOrderItem.getCreatedAt()).isNotNull();
+    }
+
 }

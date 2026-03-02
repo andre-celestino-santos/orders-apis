@@ -95,4 +95,22 @@ public class OrderMapperTest {
         Assertions.assertThat(responseItem.getCreatedAt()).isEqualTo(itemEntity.getCreatedAt());
     }
 
+    @Test
+    public void shouldReturnEntityWithPublicIdSuccessfully() {
+        UUID publicId = UUID.randomUUID();
+        OrderItemRequestDto request = new OrderItemRequestDto();
+        request.setQuantity(14);
+        request.setId(UUID.randomUUID());
+
+        Order order = orderMapper.toEntity(publicId, request);
+        Assertions.assertThat(order.getPublicId()).isEqualTo(publicId);
+
+        List<OrderItem> items = order.getItems();
+        Assertions.assertThat(items).hasSize(1);
+
+        OrderItem item = items.get(0);
+        Assertions.assertThat(item.getQuantity()).isEqualTo(request.getQuantity());
+        Assertions.assertThat(item.getProduct().getPublicId()).isEqualTo(request.getId());
+    }
+
 }

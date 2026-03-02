@@ -5,7 +5,9 @@ import com.andre.orders_apis.dto.OrderItemResponseDto;
 import com.andre.orders_apis.dto.OrderRequestDto;
 import com.andre.orders_apis.dto.OrderResponseDto;
 import com.andre.orders_apis.entity.Order;
+import com.andre.orders_apis.entity.OrderItem;
 import com.andre.orders_apis.entity.OrderStatus;
+import com.andre.orders_apis.entity.Product;
 import com.andre.orders_apis.enums.OrderApiError;
 import com.andre.orders_apis.exception.ResourceNotFoundException;
 import com.andre.orders_apis.filter.JwtAuthenticationFilter;
@@ -89,7 +91,7 @@ public class OrderControllerTest {
 
         response.setItems(responseItems);
 
-        Mockito.when(orderMapper.toResponse(Mockito.any())).thenReturn(response);
+        Mockito.when(orderMapper.toResponse(Mockito.any(Order.class))).thenReturn(response);
 
         String content = objectMapper.writeValueAsString(request);
 
@@ -415,6 +417,52 @@ public class OrderControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.id").value("""
                         Method parameter 'id': Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'; Invalid UUID string: abc123"""));
+    }
+
+    @Test
+    public void shouldAddItemSuccessfully() throws Exception {
+        UUID publicId = UUID.randomUUID();
+
+        OrderItemRequestDto request = new OrderItemRequestDto();
+        request.setId(UUID.randomUUID());
+        request.setQuantity(22);
+
+        Mockito.when(orderMapper.toEntity(Mockito.any(), Mockito.any())).thenReturn(new Order());
+
+        OrderItemResponseDto response = new OrderItemResponseDto();
+        response.setId(request.getId());
+        response.setQuantity(request.getQuantity());
+        response.setCreatedAt(LocalDateTime.now());
+
+        Order savedOrder = new Order();
+        List<OrderItem> savedItems = new ArrayList<>();
+        OrderItem savedItem = new OrderItem();
+        Product savedProduct = new Product();
+        savedProduct.setPublicId(response.getId());
+        savedItem.setProduct(savedProduct);
+        savedItems.add(savedItem);
+        savedOrder.setItems(savedItems);
+
+        Mockito.when(orderService.addItem(Mockito.any())).thenReturn(savedOrder);
+
+        Mockito.when(orderMapper.toResponse(Mockito.any(OrderItem.class))).thenReturn(response);
+
+        String content = objectMapper.writeValueAsString(request);
+
+        mockMvc.perform(post("/v1/orders/%s/items".formatted(publicId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isCreated())
+                .andExpect(header().string(HttpHeaders.LOCATION, Matchers.endsWith("/v1/orders/%s/items/%s".formatted(publicId, response.getId()))))
+                .andExpect(jsonPath("$.id").value(response.getId().toString()))
+                .andExpect(jsonPath("$.quantity").value(response.getQuantity()))
+                .andExpect(jsonPath("$.createdAt").isNotEmpty());
+
+        Mockito.verify(orderMapper, Mockito.atMostOnce()).toEntity(Mockito.any(), Mockito.any());
+
+        Mockito.verify(orderService, Mockito.atMostOnce()).addItem(Mockito.any());
+
+        Mockito.verify(orderMapper, Mockito.atMostOnce()).toResponse(Mockito.any(OrderItem.class));
     }
 
 }

@@ -1,8 +1,11 @@
 package com.andre.orders_apis.controller;
 
+import com.andre.orders_apis.dto.OrderItemRequestDto;
+import com.andre.orders_apis.dto.OrderItemResponseDto;
 import com.andre.orders_apis.dto.OrderRequestDto;
 import com.andre.orders_apis.dto.OrderResponseDto;
 import com.andre.orders_apis.entity.Order;
+import com.andre.orders_apis.entity.OrderItem;
 import com.andre.orders_apis.mapper.OrderMapper;
 import com.andre.orders_apis.service.OrderService;
 import jakarta.validation.Valid;
@@ -39,6 +42,26 @@ public class OrderController {
                 .toUri();
 
         OrderResponseDto response = orderMapper.toResponse(order);
+
+        return ResponseEntity.created(location).body(response);
+    }
+
+    @PostMapping("/{id}/items")
+    public ResponseEntity<OrderItemResponseDto> addItem(@PathVariable UUID id,
+                                                        @RequestBody @Valid OrderItemRequestDto body) {
+        Order orderRequest = orderMapper.toEntity(id, body);
+
+        Order order = orderService.addItem(orderRequest);
+
+        OrderItem orderItem = order.getItems().get(0);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(orderItem.getProduct().getPublicId())
+                .toUri();
+
+        OrderItemResponseDto response = orderMapper.toResponse(orderItem);
 
         return ResponseEntity.created(location).body(response);
     }

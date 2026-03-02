@@ -9,7 +9,9 @@ import com.andre.orders_apis.entity.OrderItem;
 import com.andre.orders_apis.entity.Product;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class OrderMapper {
@@ -19,6 +21,16 @@ public class OrderMapper {
         entity.setCustomerId(request.getCustomerId());
         List<OrderItem> itemsEntity = request.getItems().stream().map(this::toEntity).toList();
         entity.setItems(itemsEntity);
+        return entity;
+    }
+
+    public Order toEntity(UUID publicId, OrderItemRequestDto request) {
+        Order entity = new Order();
+        entity.setPublicId(publicId);
+        List<OrderItem> items = new ArrayList<>();
+        OrderItem item = toEntity(request);
+        items.add(item);
+        entity.setItems(items);
         return entity;
     }
 
@@ -43,7 +55,7 @@ public class OrderMapper {
         return entity;
     }
 
-    private OrderItemResponseDto toResponse(OrderItem entity) {
+    public OrderItemResponseDto toResponse(OrderItem entity) {
         OrderItemResponseDto response = new OrderItemResponseDto();
         response.setId(entity.getProduct().getPublicId());
         response.setQuantity(entity.getQuantity());
